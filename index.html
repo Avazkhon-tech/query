@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Query Uzinfocom</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="./css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <script src="./js/script.js" defer></script>
+    <script src="./js/module.js" defer></script>
+    <script src="./js/autocomplete.js" defer></script>
+    <script src="./js/lib/index.js" defer></script>
+
+</head>
+
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>Database Objects</h2>
+            </div>
+            <div class="accordion">
+
+                <div class="section">
+                    <div class="section-header" data-toggle onclick="toggleSection(this)">
+                        <span>Tables</span>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <ul class="section-body" id="tables"></ul>
+                </div>
+
+                <div class="section">
+                    <div class="section-header" data-toggle onclick="toggleSection(this)">
+                        <span>Views</span>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <ul class="section-body" id="views"></ul>
+                </div>
+
+                <div class="section">
+                    <div class="section-header" data-toggle onclick="toggleSection(this)">
+                        <span>Materialized Views</span>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <ul class="section-body" id="mviews"></ul>
+                </div>
+
+                <div class="section">
+                    <div class="section-header" data-toggle onclick="toggleSection(this)">
+                        <span>Indexes</span>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <ul class="section-body" id="indexes"></ul>
+                </div>
+
+            </div>
+        </aside>
+
+
+        <div class="main">
+            <div class="topbar">
+                <button id="sidebar-toggle" class="sidebar-toggle-btn" title="Toggle Sidebar">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                <input id="baseUrl" placeholder="https://api.example.com" value="https://hc.ssv.uz" class="topbar-input" />
+                <input id="token" placeholder="JWT token (Bearer)" class="topbar-input token-input" />
+                <button id="connectBtn" class="connect-btn" onclick="connect(this)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="16 18 22 12 16 6"></polyline>
+                        <polyline points="8 6 2 12 8 18"></polyline>
+                    </svg>
+                    Connect
+                </button>
+            </div>
+
+            <div class="playground">
+                <div class="editor-wrapper">
+                    <div class="editor" id="editor" contenteditable="true"></div>
+                    <ul id="autocomplete" class="autocomplete hidden"></ul>
+                </div>
+
+                <div class="editor-actions">
+                    <button class="run-btn" onclick="runQuery()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                        Run Query
+                        <span class="kbd">Ctrl+Enter</span>
+                    </button>
+                    <div class="view-toggles">
+                        <button id="btn-json" class="view-btn active" onclick="switchView('json')">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="16 18 22 12 16 6"></polyline>
+                                <polyline points="8 6 2 12 8 18"></polyline>
+                            </svg>
+                            JSON
+                        </button>
+                        <button id="btn-table" class="view-btn" onclick="switchView('table')">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="14" width="7" height="7"></rect>
+                                <rect x="3" y="14" width="7" height="7"></rect>
+                            </svg>
+                            Table
+                        </button>
+                    </div>
+                </div>
+
+                <div id="result-container" class="result-container">
+                    <pre class="result" id="result"></pre>
+                    <div id="table-result" class="table-result hidden"></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+
+</html>
