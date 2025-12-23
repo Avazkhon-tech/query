@@ -175,14 +175,25 @@ function showAutocomplete(options) {
     }).join('');
 
     const rect = getCaretRect();
-    if (rect.top === 0 && rect.left === 0 && lastRange) {
+    const editorRect = document.getElementById('editor').getBoundingClientRect();
+
+    // Calculate relative position
+    let left = rect.left - editorRect.left;
+    let top = rect.bottom - editorRect.top;
+
+    // Adjust if valid
+    if (rect.top !== 0 || rect.left !== 0) {
+        autocomplete.style.left = left + 'px';
+        autocomplete.style.top = top + 'px';
+    } else if (lastRange) {
+        // Fallback
         const r = lastRange.getBoundingClientRect();
-        autocomplete.style.left = r.left + 'px';
-        autocomplete.style.top = r.bottom + 'px';
-    } else {
-        autocomplete.style.left = rect.left + 'px';
-        autocomplete.style.top = rect.bottom + 'px';
+        left = r.left - editorRect.left;
+        top = r.bottom - editorRect.top;
+        autocomplete.style.left = left + 'px';
+        autocomplete.style.top = top + 'px';
     }
+
     autocomplete.classList.remove('hidden');
 }
 
@@ -327,8 +338,13 @@ function updateAutocomplete() {
     autocomplete.innerHTML = matches.map((w, i) => `<li class="${i === 0 ? 'active' : ''}" data-value="${w}">${w}</li>`).join('');
 
     const rect = lastRange.getBoundingClientRect();
-    autocomplete.style.left = rect.left + 'px';
-    autocomplete.style.top = rect.bottom + 'px';
+    const editorRect = document.getElementById('editor').getBoundingClientRect();
+
+    const left = rect.left - editorRect.left;
+    const top = rect.bottom - editorRect.top;
+
+    autocomplete.style.left = left + 'px';
+    autocomplete.style.top = top + 'px';
     autocomplete.classList.remove('hidden');
 }
 
