@@ -82,7 +82,9 @@ async function getColumnsForTable(tableName) {
         const base = document.getElementById('baseUrl').value;
         const url = `${base}/api/classificator/v1/query`;
 
-        const query = `SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '${tableName}'`;
+        // Escape single quotes to prevent SQL injection
+        const escapedTableName = tableName.replace(/'/g, "''");
+        const query = `SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '${escapedTableName}'`;
 
         const res = await fetch(url, {
             method: 'POST',

@@ -26,8 +26,6 @@ window.runQuery = async function () {
         return;
     }
 
-    const safeQuery = cleanQuery.replace(/'/g, "''").replace(/\\/g, "\\\\");
-
     result.textContent = 'Running...';
     document.getElementById('table-result').innerHTML = '';
 
@@ -39,7 +37,7 @@ window.runQuery = async function () {
                 'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + token
             },
-            body: JSON.stringify({ query: safeQuery })
+            body: JSON.stringify({ query: cleanQuery })
         });
 
         if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
@@ -209,7 +207,8 @@ async function loadDbObjects() {
             const li = document.createElement('li');
             li.textContent = r.indexname;
             li.ondblclick = () => {
-                const q = `-- Index info\nSELECT * FROM pg_indexes WHERE indexname = '${r.indexname}';`;
+                const escapedIndexName = r.indexname.replace(/'/g, "''");
+                const q = `-- Index info\nSELECT * FROM pg_indexes WHERE indexname = '${escapedIndexName}';`;
                 if (window.editor) insertQuery(q); else document.getElementById('editor').innerText = q;
                 window.runQuery();
             };
@@ -265,56 +264,4 @@ window.addEventListener("DOMContentLoaded", () => {
 function insertQuery(q) {
     document.getElementById('editor').innerText = q;
     runQuery()
-}
-
-
-function renderTable(data, container) {
-    container.innerHTML = '';
-
-    if (!Array.isArray(data) || data.length === 0) {
-        container.innerHTML = '<div style="padding:12px">No data or not a table result</div>';
-        return;
-    }
-
-    const headers = Object.keys(data[0]);
-    if (!headers.length) {
-        container.innerHTML = '<div style="padding:12px">Empty rows</div>';
-        return;
-    }
-
-    const table = document.createElement('table');
-    table.className = 'table table-dark table-striped table-bordered table-hover table-sm mb-0';
-
-    const thead = document.createElement('thead');
-    thead.className = 'table-light sticky-top';
-    const trHead = document.createElement('tr');
-
-    headers.forEach(h => {
-        const th = document.createElement('th');
-        th.textContent = h;
-        trHead.appendChild(th);
-    });
-    thead.appendChild(trHead);
-    table.appendChild(thead);
-
-    const tbody = document.createElement('tbody');
-    data.forEach(row => {
-        const tr = document.createElement('tr');
-        headers.forEach(h => {
-            const td = document.createElement('td');
-            const val = row[h];
-            td.textContent = (val === null) ? 'NULL' : (typeof val === 'object' ? JSON.stringify(val) : val);
-            if (val === null) {
-                td.style.color = '#ce916a';
-                td.style.fontStyle = 'italic';
-            }
-            tr.appendChild(td);
-        });
-        tbody.appendChild(tr);
-    });
-    
-    table.appendChild(tbody);
-    
-    // Add the table directly to container without wrapper
-    container.appendChild(table);
 }
