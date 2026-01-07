@@ -10,7 +10,9 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="./css/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
 
     <script src="./js/script.js" defer></script>
     <script src="./js/module.js" defer></script>
@@ -24,6 +26,7 @@
         <aside class="sidebar">
             <div class="sidebar-header">
                 <h2>Database Objects</h2>
+                <input type="text" id="db-search" class="db-search-input" placeholder="Search objects..." />
             </div>
             <div class="accordion">
 
@@ -72,9 +75,16 @@
                         <line x1="3" y1="18" x2="21" y2="18"></line>
                     </svg>
                 </button>
-                <input id="baseUrl" placeholder="https://api.example.com" value="https://hc.ssv.uz" class="topbar-input" />
+                <select id="apiUrlSelect" class="topbar-input">
+                    <option value="https://hc.ssv.uz/api/classificator/v1/query">hc.ssv.uz/api/classificator/v1/query
+                    </option>
+                    <option value="https://test-hc.ssv.uz/api/classificator/v1/query">
+                        test-hc.ssv.uz/api/classificator/v1/query</option>
+                    <option value="http://aistroke.ssv.uz/api/stroke/v1/query">aistroke.ssv.uz/api/stroke/v1/query
+                    </option>
+                </select>
                 <input id="token" placeholder="JWT token (Bearer)" class="topbar-input token-input" />
-                <button id="connectBtn" class="connect-btn" onclick="connect(this)">
+                <button id="connectBtn" class="connect-btn" onclick="connect(this)" title="Connect (Alt + C)">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="16 18 22 12 16 6"></polyline>
                         <polyline points="8 6 2 12 8 18"></polyline>
@@ -99,14 +109,16 @@
                     </button>
                     <div class="view-toggles">
                         <button id="btn-json" class="view-btn active" onclick="switchView('json')">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <polyline points="16 18 22 12 16 6"></polyline>
                                 <polyline points="8 6 2 12 8 18"></polyline>
                             </svg>
                             JSON
                         </button>
                         <button id="btn-table" class="view-btn" onclick="switchView('table')">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <rect x="3" y="3" width="7" height="7"></rect>
                                 <rect x="14" y="3" width="7" height="7"></rect>
                                 <rect x="14" y="14" width="7" height="7"></rect>
@@ -118,8 +130,34 @@
                 </div>
 
                 <div id="result-container" class="result-container">
-                    <pre class="result" id="result"></pre>
-                    <div id="table-result" class="table-result hidden"></div>
+                    <div class="result-header">
+                        <div id="execution-time" class="execution-time hidden"></div>
+                        <div id="result-count" class="result-count hidden"></div>
+                        <button id="copy-btn" class="copy-btn hidden" onclick="copyResult()"
+                            title="Copy JSON (Ctrl + Shift + C)">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                            <span>Copy</span>
+                        </button>
+                        <button id="download-btn" class="copy-btn hidden" onclick="downloadResult()"
+                            title="Download JSON (Ctrl + S)">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            <span>JSON</span>
+                        </button>
+                        <input id="filename-input" type="text" placeholder="filename" class="filename-input hidden" />
+                    </div>
+                    <div class="result-body">
+                        <pre class="result" id="result"></pre>
+                        <div id="table-result" class="table-result hidden"></div>
+                    </div>
                 </div>
             </div>
         </div>

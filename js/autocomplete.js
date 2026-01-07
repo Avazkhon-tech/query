@@ -79,8 +79,8 @@ async function getColumnsForTable(tableName) {
     if (!token) return [];
 
     try {
-        const base = document.getElementById('baseUrl').value;
-        const url = `${base}/api/classificator/v1/query`;
+        const url = document.getElementById('apiUrlSelect').value;
+        const payloadKey = (url.includes('aistroke.ssv.uz') || url.includes('test-hc.ssv.uz')) ? 'query' : 'q';
 
         // Escape single quotes to prevent SQL injection
         const escapedTableName = tableName.replace(/'/g, "''");
@@ -92,7 +92,7 @@ async function getColumnsForTable(tableName) {
                 'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + token
             },
-            body: JSON.stringify({ query })
+            body: JSON.stringify({ [payloadKey]: query })
         });
 
         if (!res.ok) {
@@ -114,8 +114,36 @@ async function getColumnsForTable(tableName) {
     }
 }
 
-editor.addEventListener('input', () => {
+// Store table aliases mapping
+let tableAliases = {};
+
+editor.addEventListener('input', async () => {
     const word = getCurrentWord();
+    const fullText = document.getElementById('editor').innerText;
+
+    // Update table aliases from the query
+    tableAliases = parseTableAliases(fullText);
+
+    // Check if we're typing after a dot (table.column or alias.column)
+    const dotContext = getDotContext();
+    if (dotContext) {
+        const tableName = resolveTableName(dotContext.prefix);
+        if (tableName) {
+            const cols = await getColumnsForTable(tableName);
+            if (cols.length) {
+                const matches = dotContext.word
+                    ? cols.filter(c => c.label.toLowerCase().startsWith(dotContext.word.toLowerCase()))
+                    : cols;
+                if (matches.length) {
+                    showAutocomplete(matches);
+                    return;
+                }
+            }
+        }
+        hideAutocomplete();
+        return;
+    }
+
     if (!word) {
         hideAutocomplete();
         return;
@@ -126,6 +154,10 @@ editor.addEventListener('input', () => {
 
     if (["FROM", "JOIN"].includes(lastWord.toUpperCase())) {
         options = getAllDbObjects();
+    } else if (["WHERE", "AND", "OR"].includes(lastWord.toUpperCase())) {
+        // After WHERE/AND/OR, suggest table names/aliases AND keywords
+        const tableAndAliasNames = Object.keys(tableAliases);
+        options = [...tableAndAliasNames, ...sqlKeywords];
     } else {
         options = sqlKeywords;
     }
@@ -139,6 +171,55 @@ editor.addEventListener('input', () => {
 
     showAutocomplete(matches);
 });
+
+// Parse table aliases from SQL query (e.g., "FROM visits v" -> {v: "visits"})
+function parseTableAliases(sql) {
+    const aliases = {};
+
+    // Match patterns like: FROM table_name alias, JOIN table_name alias
+    const pattern = /(?:FROM|JOIN)\s+(\w+)(?:\s+(?:AS\s+)?(\w+))?/gi;
+    let match;
+
+    while ((match = pattern.exec(sql)) !== null) {
+        const tableName = match[1];
+        const alias = match[2];
+
+        if (alias && alias.toUpperCase() !== 'ON' && alias.toUpperCase() !== 'WHERE') {
+            aliases[alias.toLowerCase()] = tableName.toLowerCase();
+        }
+        // Also map table name to itself
+        aliases[tableName.toLowerCase()] = tableName.toLowerCase();
+    }
+
+    return aliases;
+}
+
+// Get context when typing after a dot
+function getDotContext() {
+    const selection = window.getSelection();
+    if (!selection.rangeCount) return null;
+
+    const range = selection.getRangeAt(0);
+    const text = range.startContainer.textContent.slice(0, range.startOffset);
+
+    // Match pattern: word.word or word. (e.g., "v." or "v.col")
+    const match = text.match(/(\w+)\.(\w*)$/);
+    if (match) {
+        return {
+            prefix: match[1],  // table name or alias before dot
+            word: match[2]     // partial column name after dot
+        };
+    }
+
+    return null;
+}
+
+// Resolve table name from alias or return the name itself
+function resolveTableName(nameOrAlias) {
+    const lower = nameOrAlias.toLowerCase();
+    return tableAliases[lower] || nameOrAlias;
+}
+
 
 function getCurrentWord() {
     const selection = window.getSelection();
@@ -242,14 +323,33 @@ function insertAutocomplete(word) {
 
     const text = node.textContent;
     const before = text.slice(0, offset);
-    const match = before.match(/(\w+)$/);
-    const start = match ? offset - match[1].length : offset;
+
+    // Check if we're completing after a dot (e.g., "v.col")
+    const dotMatch = before.match(/(\w+)\.(\w*)$/);
+    let start;
+
+    if (dotMatch) {
+        // Only replace the part after the dot
+        start = offset - dotMatch[2].length;
+    } else {
+        // Normal word completion
+        const match = before.match(/(\w+)$/);
+        start = match ? offset - match[1].length : offset;
+    }
 
     range.setStart(node, start);
     range.setEnd(node, offset);
     range.deleteContents();
 
-    const insert = document.createTextNode(word + " ");
+    // Determine if we should add a space after the word
+    // Don't add space after table names (user will type space or alias)
+    // Add space for keywords and columns
+    const fullText = document.getElementById('editor').innerText;
+    const beforeCursor = fullText.substring(0, fullText.lastIndexOf(before) + before.length - (offset - start));
+    const lastWords = beforeCursor.trim().split(/\s+/).slice(-2);
+    const isTableName = lastWords.length > 0 && ['FROM', 'JOIN'].includes(lastWords[lastWords.length - 1].toUpperCase());
+
+    const insert = document.createTextNode(isTableName ? word : word + " ");
     range.insertNode(insert);
     range.setStartAfter(insert);
     range.collapse(true);
@@ -357,7 +457,15 @@ autocomplete.addEventListener('mousedown', (e) => {
 });
 
 function updateActive() {
-    [...autocomplete.children].forEach((li, i) => li.classList.toggle('active', i === activeIndex));
+    [...autocomplete.children].forEach((li, i) => {
+        const isActive = i === activeIndex;
+        li.classList.toggle('active', isActive);
+
+        // Scroll the active item into view
+        if (isActive) {
+            li.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+    });
 }
 
 function hideAutocomplete() {

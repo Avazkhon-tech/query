@@ -21,6 +21,9 @@ editor.addEventListener('keydown', (e) => {
     }
 
     if (e.key === 'Enter') {
+        // Don't handle Enter if Ctrl or Meta is pressed (that's for running the query)
+        if (e.ctrlKey || e.metaKey) return;
+
         e.preventDefault();
 
         const selection = window.getSelection();
@@ -43,4 +46,12 @@ editor.addEventListener('keydown', (e) => {
 
         editor.scrollTop = editor.scrollHeight;
     }
+});
+
+editor.addEventListener('paste', (e) => {
+    e.preventDefault();
+    const text = (e.originalEvent || e).clipboardData.getData('text/plain');
+
+    // Use execCommand to preserve undo history (Ctrl+Z support)
+    document.execCommand('insertText', false, text);
 });

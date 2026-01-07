@@ -20,6 +20,7 @@ window.runQuery = async function () {
     const rawQuery = document.getElementById('editor').innerText;
     const cleanQuery = rawQuery.trim();
     const result = document.getElementById('result');
+    const timeDiv = document.getElementById('execution-time');
 
     if (!cleanQuery) {
         result.textContent = 'Query empty';
@@ -28,21 +29,37 @@ window.runQuery = async function () {
 
     result.textContent = 'Running...';
     document.getElementById('table-result').innerHTML = '';
+    document.getElementById('copy-btn').classList.add('hidden');
+    document.getElementById('download-btn').classList.add('hidden');
+    document.getElementById('filename-input').classList.add('hidden');
+    document.getElementById('result-count').classList.add('hidden');
+    timeDiv.classList.add('hidden');
+
+    const startTime = performance.now();
 
     try {
         const token = localStorage.getItem('jwt');
-        const res = await fetch(apiUrl(), {
+        const url = apiUrl();
+        const payloadKey = getQueryKey(url);
+
+        const res = await fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + token
             },
-            body: JSON.stringify({ query: cleanQuery })
+            body: JSON.stringify({ [payloadKey]: cleanQuery })
         });
 
         if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
 
         const data = await res.json();
+        const endTime = performance.now();
+        const duration = ((endTime - startTime) / 1000).toFixed(3);
+
+        timeDiv.textContent = `${duration}s`;
+        timeDiv.classList.remove('hidden');
+
         lastResultData = data;
         renderResult();
 
@@ -66,6 +83,20 @@ function renderResult() {
 
     const resultPre = document.getElementById('result');
     const tableDiv = document.getElementById('table-result');
+    const copyBtn = document.getElementById('copy-btn');
+    const countDiv = document.getElementById('result-count');
+
+    if (lastResultData) {
+        copyBtn.classList.remove('hidden');
+        document.getElementById('download-btn').classList.remove('hidden');
+        document.getElementById('filename-input').classList.remove('hidden');
+        if (Array.isArray(lastResultData)) {
+            countDiv.textContent = `${lastResultData.length} rows`;
+            countDiv.classList.remove('hidden');
+        } else {
+            countDiv.classList.add('hidden');
+        }
+    }
 
     if (currentView === 'json') {
         resultPre.style.display = 'block';
@@ -133,8 +164,14 @@ function renderTable(data, container) {
     container.appendChild(wrapper);
 }
 function apiUrl() {
-    const base = document.getElementById('baseUrl').value;
-    return `${base}/api/classificator/v1/query`;
+    return document.getElementById('apiUrlSelect').value;
+}
+
+function getQueryKey(url) {
+    if (url.includes('aistroke.ssv.uz') || url.includes('test-hc.ssv.uz')) {
+        return 'query';
+    }
+    return 'q';
 }
 
 function syntaxHighlight(json) {
@@ -161,10 +198,13 @@ async function loadDbObjects() {
     };
 
     try {
-        const tvRes = await fetch(apiUrl(), {
+        const url = apiUrl();
+        const payloadKey = getQueryKey(url);
+
+        const tvRes = await fetch(url, {
             method: 'POST',
             headers,
-            body: JSON.stringify({ query: "SELECT table_name, table_type FROM information_schema.tables WHERE table_schema = 'public';" })
+            body: JSON.stringify({ [payloadKey]: "SELECT table_name, table_type FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name;" })
         });
         const tvData = await tvRes.json();
 
@@ -172,9 +212,13 @@ async function loadDbObjects() {
         const views = document.getElementById('views');
         tables.innerHTML = ''; views.innerHTML = '';
 
+        // Sort alphabetically (already sorted by SQL, but keeping for consistency)
+        tvData.sort((a, b) => a.table_name.localeCompare(b.table_name));
+
         tvData.forEach(r => {
             const li = document.createElement('li');
             li.textContent = r.table_name;
+            li.setAttribute('data-name', r.table_name.toLowerCase());
             li.ondblclick = () => {
                 const q = `SELECT * FROM ${r.table_name} LIMIT 50;`;
                 if (window.editor) insertQuery(q); else document.getElementById('editor').innerText = q;
@@ -184,13 +228,18 @@ async function loadDbObjects() {
             else if (r.table_type === 'VIEW') views.appendChild(li);
         });
 
-        const mvRes = await fetch(apiUrl(), { method: 'POST', headers, body: JSON.stringify({ query: "SELECT matviewname FROM pg_matviews WHERE schemaname = 'public';" }) });
+        const mvRes = await fetch(url, { method: 'POST', headers, body: JSON.stringify({ [payloadKey]: "SELECT matviewname FROM pg_matviews WHERE schemaname = 'public' ORDER BY matviewname;" }) });
         const mvData = await mvRes.json();
         const mviews = document.getElementById('mviews');
         mviews.innerHTML = '';
+
+        // Sort alphabetically
+        mvData.sort((a, b) => a.matviewname.localeCompare(b.matviewname));
+
         mvData.forEach(r => {
             const li = document.createElement('li');
             li.textContent = r.matviewname;
+            li.setAttribute('data-name', r.matviewname.toLowerCase());
             li.ondblclick = () => {
                 const q = `SELECT * FROM ${r.matviewname} LIMIT 10;`;
                 if (window.editor) insertQuery(q); else document.getElementById('editor').innerText = q;
@@ -199,13 +248,18 @@ async function loadDbObjects() {
             mviews.appendChild(li);
         });
 
-        const idxRes = await fetch(apiUrl(), { method: 'POST', headers, body: JSON.stringify({ query: "SELECT indexname FROM pg_indexes WHERE schemaname = 'public';" }) });
+        const idxRes = await fetch(url, { method: 'POST', headers, body: JSON.stringify({ [payloadKey]: "SELECT indexname FROM pg_indexes WHERE schemaname = 'public' ORDER BY indexname;" }) });
         const idxData = await idxRes.json();
         const indexes = document.getElementById('indexes');
         indexes.innerHTML = '';
+
+        // Sort alphabetically
+        idxData.sort((a, b) => a.indexname.localeCompare(b.indexname));
+
         idxData.forEach(r => {
             const li = document.createElement('li');
             li.textContent = r.indexname;
+            li.setAttribute('data-name', r.indexname.toLowerCase());
             li.ondblclick = () => {
                 const escapedIndexName = r.indexname.replace(/'/g, "''");
                 const q = `-- Index info\nSELECT * FROM pg_indexes WHERE indexname = '${escapedIndexName}';`;
@@ -232,6 +286,28 @@ window.addEventListener("DOMContentLoaded", () => {
         sidebar.classList.toggle('closed');
     });
 
+    // Search functionality for database objects
+    const searchInput = document.getElementById('db-search');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase().trim();
+
+            // Get all list items from all sections
+            const allItems = document.querySelectorAll('#tables li, #views li, #mviews li, #indexes li');
+
+            allItems.forEach(item => {
+                const itemName = item.getAttribute('data-name') || item.textContent.toLowerCase();
+
+                if (itemName.includes(searchTerm)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    }
+
+
     const editorEl = document.getElementById('editor');
     let isResizing = false;
     editorEl.addEventListener('mousedown', (e) => {
@@ -252,16 +328,120 @@ window.addEventListener("DOMContentLoaded", () => {
     const isOpen = !auto.classList.contains('hidden');
 
     editorEl.addEventListener('keydown', (e) => {
-
         if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
             e.preventDefault();
             window.runQuery();
         }
-
     });
+
+    // Global Shortcuts
+    window.addEventListener('keydown', (e) => {
+        // Connect: Alt + C
+        if (e.altKey && e.key.toLowerCase() === 'c') {
+            e.preventDefault();
+            const connectBtn = document.getElementById('connectBtn');
+            if (connectBtn) connectBtn.click();
+        }
+
+        // Copy: Ctrl + Shift + C
+        if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'c') {
+            e.preventDefault();
+            const copyBtn = document.getElementById('copy-btn');
+            if (copyBtn && !copyBtn.classList.contains('hidden')) {
+                window.copyResult();
+            }
+        }
+
+        // Download: Ctrl + S
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+            e.preventDefault();
+            const downloadBtn = document.getElementById('download-btn');
+            if (downloadBtn && !downloadBtn.classList.contains('hidden')) {
+                window.downloadResult();
+            }
+        }
+
+        // Focus Query Console: Alt + Q
+        if (e.altKey && e.key.toLowerCase() === 'q') {
+            e.preventDefault();
+            const editor = document.getElementById('editor');
+            if (editor) {
+                editor.focus();
+                // Move cursor to end
+                const range = document.createRange();
+                range.selectNodeContents(editor);
+                range.collapse(false);
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+            }
+        }
+
+        // Focus Filename: Alt + N
+        if (e.altKey && e.key.toLowerCase() === 'n') {
+            const filenameInput = document.getElementById('filename-input');
+            if (filenameInput && !filenameInput.classList.contains('hidden')) {
+                e.preventDefault();
+                filenameInput.focus();
+                filenameInput.select();
+            }
+        }
+    });
+
+    // Token input: Enter to connect
+    const tokenInput = document.getElementById('token');
+    if (tokenInput) {
+        tokenInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                window.connect();
+            }
+        });
+    }
 });
 
 function insertQuery(q) {
     document.getElementById('editor').innerText = q;
     runQuery()
 }
+
+window.copyResult = async function () {
+    if (!lastResultData) return;
+
+    const text = JSON.stringify(lastResultData, null, 2);
+    const btn = document.getElementById('copy-btn');
+    const span = btn.querySelector('span');
+
+    try {
+        await navigator.clipboard.writeText(text);
+
+        btn.classList.add('success');
+        span.textContent = 'Copied!';
+
+        setTimeout(() => {
+            btn.classList.remove('success');
+            span.textContent = 'Copy';
+        }, 2000);
+    } catch (err) {
+        console.error('Failed to copy: ', err);
+        alert('Failed to copy results to clipboard');
+    }
+};
+
+window.downloadResult = function () {
+    if (!lastResultData) return;
+    const text = JSON.stringify(lastResultData, null, 2);
+    const blob = new Blob([text], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const inputName = document.getElementById('filename-input').value.trim();
+    const finalName = (inputName || 'query-result') + '.json';
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = finalName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+};
