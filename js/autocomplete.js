@@ -8,10 +8,11 @@ editor.addEventListener('keydown', handleKeydown);
 editor.addEventListener('click', updateRange);
 
 function getAllDbObjects() {
-    const tables = [...document.querySelectorAll('#tables li')].map(li => li.textContent);
-    const views = [...document.querySelectorAll('#views li')].map(li => li.textContent);
-    const mviews = [...document.querySelectorAll('#mviews li')].map(li => li.textContent);
-    const indexes = [...document.querySelectorAll('#indexes li')].map(li => li.textContent);
+    const extractName = li => li.querySelector('span') ? li.querySelector('span').textContent : li.textContent;
+    const tables = [...document.querySelectorAll('#tables li')].map(extractName);
+    const views = [...document.querySelectorAll('#views li')].map(extractName);
+    const mviews = [...document.querySelectorAll('#mviews li')].map(extractName);
+    const indexes = [...document.querySelectorAll('#indexes li')].map(extractName);
     return [...tables, ...views, ...mviews, ...indexes];
 }
 
@@ -73,14 +74,15 @@ function getTableNameForColumns() {
 }
 
 async function getColumnsForTable(tableName) {
-    const tables = [...document.querySelectorAll('#tables li')].map(li => li.textContent);
+    const extractName = li => li.querySelector('span') ? li.querySelector('span').textContent : li.textContent;
+    const tables = [...document.querySelectorAll('#tables li')].map(extractName);
 
     const token = localStorage.getItem('jwt');
     if (!token) return [];
 
     try {
-        const url = document.getElementById('apiUrlSelect').value;
-        const payloadKey = (url.includes('aistroke.ssv.uz') || url.includes('test-hc.ssv.uz')) ? 'query' : 'q';
+        const url = apiUrl();
+        const payloadKey = getQueryKey(url);
 
         // Escape single quotes to prevent SQL injection
         const escapedTableName = tableName.replace(/'/g, "''");
@@ -382,36 +384,6 @@ function handleKeydown(e) {
     }
 }
 
-editor.addEventListener('keydown', (e) => {
-    const isOpen = !autocomplete.classList.contains('hidden');
-    if (!isOpen) return;
-
-    if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        activeIndex = (activeIndex + 1) % currentOptions.length;
-        updateActive();
-        return;
-    }
-    if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        activeIndex = (activeIndex - 1 + currentOptions.length) % currentOptions.length;
-        updateActive();
-        return;
-    }
-    if (e.key === 'Enter' || e.key === 'Tab' || e.key === 'Space') {
-        e.preventDefault();
-        e.stopPropagation();
-        const selected = currentOptions[activeIndex];
-        const value = (typeof selected === 'string') ? selected : selected.label;
-        insertAutocomplete(value);
-        return;
-    }
-    if (e.key === 'Escape') {
-        e.preventDefault();
-        hideAutocomplete();
-        return;
-    }
-});
 
 function updateRange() {
     const sel = window.getSelection();

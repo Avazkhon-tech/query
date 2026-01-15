@@ -14,8 +14,15 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet">
 
+    <script src="./js/state.js" defer></script>
+    <script src="./js/api.js" defer></script>
+    <script src="./js/renderer.js" defer></script>
+    <script src="./js/db.js" defer></script>
+    <script src="./js/actions.js" defer></script>
+    <script src="./js/history.js" defer></script>
     <script src="./js/script.js" defer></script>
     <script src="./js/module.js" defer></script>
+    <script src="./js/ui.js" defer></script>
     <script src="./js/autocomplete.js" defer></script>
     <script src="./js/lib/index.js" defer></script>
 
@@ -82,6 +89,9 @@
                         test-hc.ssv.uz/api/classificator/v1/query</option>
                     <option value="http://aistroke.ssv.uz/api/stroke/v1/query">aistroke.ssv.uz/api/stroke/v1/query
                     </option>
+                    <option value="http://test-aistroke.ssv.uz/api/stroke/v1/query">
+                        test-aistroke.ssv.uz/api/stroke/v1/query
+                    </option>
                 </select>
                 <input id="token" placeholder="JWT token (Bearer)" class="topbar-input token-input" />
                 <button id="connectBtn" class="connect-btn" onclick="connect(this)" title="Connect (Alt + C)">
@@ -90,6 +100,12 @@
                         <polyline points="8 6 2 12 8 18"></polyline>
                     </svg>
                     Connect
+                </button>
+                <button id="sidebar-right-toggle" class="sidebar-toggle-btn ms-auto" title="Toggle History">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
                 </button>
             </div>
 
@@ -161,6 +177,21 @@
                 </div>
             </div>
         </div>
+
+        <aside class="sidebar-right">
+            <div class="sidebar-header">
+                <h2>Query History</h2>
+            </div>
+            <div class="accordion">
+                <div class="section open">
+                    <div class="section-header" data-toggle onclick="toggleSection(this)">
+                        <span>Last 7 Days</span>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <ul class="section-body history-list" id="history-list"></ul>
+                </div>
+            </div>
+        </aside>
 
     </div>
 </body>
