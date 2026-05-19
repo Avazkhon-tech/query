@@ -3,6 +3,8 @@ window.toggleResultFullscreen = function () {
     const isFs = container.classList.toggle('fullscreen');
     document.getElementById('fs-expand').style.display   = isFs ? 'none' : '';
     document.getElementById('fs-compress').style.display = isFs ? '' : 'none';
+    document.querySelector('.sidebar').classList.toggle('closed', isFs);
+    document.querySelector('.sidebar-right').classList.toggle('closed', isFs);
 };
 
 window.toggleSection = function (header) {
