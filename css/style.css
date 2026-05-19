@@ -669,6 +669,7 @@ select.topbar-input {
   padding: 2px;
   border-radius: var(--r);
   border: 1px solid var(--b1);
+  margin-left: auto;
 }
 
 .view-btn {
@@ -795,7 +796,6 @@ select.topbar-input {
   box-shadow: var(--s1);
 }
 
-.result-header .copy-btn:first-of-type { margin-left: auto; }
 
 .copy-btn:hover {
   background: var(--bg-1);
