@@ -90,7 +90,7 @@ body {
   flex-direction: column;
   overflow: hidden;
   border-right: 1px solid var(--b1);
-  transition: margin 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: margin 0.28s cubic-bezier(0.4, 0, 0.2, 1), width 0s;
 }
 
 .sidebar-right {
@@ -299,6 +299,42 @@ body {
 }
 
 .count-btn span { font-weight: 600; }
+
+/* ─── Resize Handles ─────────────────────── */
+
+.resize-handle {
+  width: 5px;
+  flex-shrink: 0;
+  cursor: col-resize;
+  background: transparent;
+  position: relative;
+  z-index: 20;
+  transition: background 0.15s;
+}
+
+.resize-handle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 1px;
+  height: 40px;
+  background: var(--b2);
+  border-radius: 2px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.resize-handle:hover::after,
+.resize-handle.dragging::after {
+  opacity: 1;
+}
+
+.resize-handle:hover,
+.resize-handle.dragging {
+  background: var(--accent-dim);
+}
 
 /* ─── Main ────────────────────────────────── */
 

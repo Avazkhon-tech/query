@@ -60,6 +60,87 @@ window.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // Panel resize — left sidebar
+    (function () {
+        const handle = document.getElementById('resize-left');
+        const sidebar = document.querySelector('.sidebar');
+        const MIN = 160, MAX = 520;
+        let dragging = false, startX, startW;
+
+        handle.addEventListener('mousedown', e => {
+            if (sidebar.classList.contains('closed')) return;
+            dragging = true;
+            startX = e.clientX;
+            startW = sidebar.getBoundingClientRect().width;
+            handle.classList.add('dragging');
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', e => {
+            if (!dragging) return;
+            const w = Math.min(MAX, Math.max(MIN, startW + (e.clientX - startX)));
+            sidebar.style.width = w + 'px';
+            // keep closed offset in sync
+            const style = document.getElementById('sidebar-closed-style') || (() => {
+                const s = document.createElement('style');
+                s.id = 'sidebar-closed-style';
+                document.head.appendChild(s);
+                return s;
+            })();
+            style.textContent = `.sidebar.closed { margin-left: -${w}px !important; }`;
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (!dragging) return;
+            dragging = false;
+            handle.classList.remove('dragging');
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+        });
+    })();
+
+    // Panel resize — right sidebar
+    (function () {
+        const handle = document.getElementById('resize-right');
+        const sidebar = document.querySelector('.sidebar-right');
+        const MIN = 160, MAX = 520;
+        let dragging = false, startX, startW;
+
+        handle.addEventListener('mousedown', e => {
+            if (sidebar.classList.contains('closed')) return;
+            dragging = true;
+            startX = e.clientX;
+            startW = sidebar.getBoundingClientRect().width;
+            handle.classList.add('dragging');
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', e => {
+            if (!dragging) return;
+            const w = Math.min(MAX, Math.max(MIN, startW - (e.clientX - startX)));
+            sidebar.style.width = w + 'px';
+            const style = document.getElementById('sidebar-right-closed-style') || (() => {
+                const s = document.createElement('style');
+                s.id = 'sidebar-right-closed-style';
+                document.head.appendChild(s);
+                return s;
+            })();
+            style.textContent = `.sidebar-right.closed { margin-right: -${w}px !important; }`;
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (!dragging) return;
+            dragging = false;
+            handle.classList.remove('dragging');
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+        });
+    })();
+
     // Editor Resize
     const editorEl = document.getElementById('editor');
     let isResizing = false;
