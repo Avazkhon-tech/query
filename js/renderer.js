@@ -1,5 +1,28 @@
 let pendingEdits = new Map(); // rowIndex -> { original: {}, changes: {} }
 
+const DATE_COL_RE = /date|time|stamp|created|modified|updated|deleted|published|expires?|birth|start|end|at$/i;
+
+function formatTimestamp(val, colName) {
+    if (!DATE_COL_RE.test(colName)) return null;
+    const num = Number(val);
+    if (!Number.isInteger(num) || isNaN(num)) return null;
+
+    let date;
+    if (num > 1e12 && num < 1e14) {
+        date = new Date(num);          // milliseconds
+    } else if (num > 1e9 && num < 1e11) {
+        date = new Date(num * 1000);   // seconds
+    } else {
+        return null;
+    }
+
+    if (isNaN(date.getTime())) return null;
+
+    const pad = n => String(n).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())} `
+         + `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+}
+
 function renderResult() {
     if (!lastResultData) return;
 
@@ -80,10 +103,21 @@ function renderTable(data, container) {
                     toggleBoolCell(td, badge, rowIndex, row, h);
                 });
             } else {
-                td.textContent = (val === null) ? 'NULL' : (typeof val === 'object' ? JSON.stringify(val) : val);
                 if (val === null) {
+                    td.textContent = 'NULL';
                     td.style.color = '#ce916a';
                     td.style.fontStyle = 'italic';
+                } else if (typeof val === 'object') {
+                    td.textContent = JSON.stringify(val);
+                } else {
+                    const formatted = formatTimestamp(val, h);
+                    if (formatted) {
+                        td.textContent = formatted;
+                        td.title = String(val);
+                        td.classList.add('cell-date');
+                    } else {
+                        td.textContent = val;
+                    }
                 }
             }
             tr.appendChild(td);

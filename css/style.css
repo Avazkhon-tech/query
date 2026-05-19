@@ -977,6 +977,7 @@ select.topbar-input {
 [data-theme="dark"] .bool-false { color: #fbbf24; }
 
 .table-result td.cell-editable { min-width: 60px; }
+.table-result td.cell-date { color: var(--accent-lt); font-size: 13px; }
 
 .table-result td.cell-modified {
   background: #fef3c7 !important;
