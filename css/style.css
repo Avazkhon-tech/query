@@ -257,6 +257,34 @@ body {
 .history-item:hover .history-query-text { color: var(--accent); }
 .history-item:hover .history-meta       { color: var(--t1); }
 
+/* History preview popup (hover) */
+
+.history-preview-popup {
+  position: fixed;
+  z-index: 9999;
+  width: 300px;
+  background: var(--bg);
+  border: 1px solid var(--b2);
+  border-radius: var(--r-lg);
+  box-shadow: var(--s2);
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.history-preview-sql {
+  margin: 0;
+  padding: 12px 14px;
+  font-family: var(--f-mono);
+  font-size: 12.5px;
+  line-height: 1.75;
+  color: var(--t0);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 340px;
+  overflow-y: auto;
+  background: var(--bg);
+}
+
 .empty-msg {
   color: var(--t2) !important;
   font-style: italic;

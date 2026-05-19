@@ -60,6 +60,9 @@ window.renderHistory = function () {
             <div class="history-meta">${dateStr}, ${timeStr}</div>
         `;
 
+        li.addEventListener('mouseenter', () => showHistoryPreview(item.query, li));
+        li.addEventListener('mouseleave', closeHistoryPreview);
+
         li.onclick = () => {
             const editor = document.getElementById('editor');
             if (editor) {
@@ -76,6 +79,32 @@ window.clearHistory = function () {
     localStorage.removeItem(HISTORY_KEY);
     renderHistory();
 };
+
+function showHistoryPreview(query, anchor) {
+    closeHistoryPreview();
+
+    const popup = document.createElement('div');
+    popup.id = 'history-preview-popup';
+    popup.className = 'history-preview-popup';
+    popup.innerHTML = `<pre class="history-preview-sql">${escapeHtml(query)}</pre>`;
+
+    document.body.appendChild(popup);
+
+    const rect = anchor.getBoundingClientRect();
+    const popupW = 300;
+    let left = rect.left - popupW - 6;
+    if (left < 8) left = rect.right + 6;
+    let top = rect.top;
+    const maxTop = window.innerHeight - popup.offsetHeight - 8;
+    if (top > maxTop) top = maxTop;
+    popup.style.left = left + 'px';
+    popup.style.top  = top + 'px';
+}
+
+function closeHistoryPreview() {
+    const existing = document.getElementById('history-preview-popup');
+    if (existing) existing.remove();
+}
 
 function escapeHtml(text) {
     const div = document.createElement('div');
