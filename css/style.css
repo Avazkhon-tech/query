@@ -627,14 +627,14 @@ select.topbar-input {
 }
 
 .run-btn {
-  padding: 8px 20px;
+  padding: 5px 12px;
   background: var(--green);
   color: #fff;
   border: none;
   border-radius: var(--r);
   cursor: pointer;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 12px;
   font-family: var(--f-ui);
   transition: background 0.14s, box-shadow 0.14s, transform 0.1s;
   display: flex;
