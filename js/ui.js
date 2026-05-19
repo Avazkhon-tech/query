@@ -63,6 +63,15 @@ window.addEventListener("DOMContentLoaded", () => {
 
     // Global Keyboard Shortcuts
     window.addEventListener('keydown', (e) => {
+        // Commit pending edits: Ctrl + Enter (when commit bar is visible)
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            if (document.getElementById('edit-commit-bar')) {
+                e.preventDefault();
+                window.commitChanges();
+                return;
+            }
+        }
+
         // Connect: Alt + C
         if (e.altKey && e.key.toLowerCase() === 'c') {
             e.preventDefault();

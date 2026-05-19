@@ -3,7 +3,7 @@ function apiUrl() {
 }
 
 function getQueryKey(url) {
-    if (url.includes('aistroke.ssv.uz') || url.includes('test-hc.ssv.uz')) {
+    if (url.includes('aistroke')) {
         return 'query';
     }
     return 'q';

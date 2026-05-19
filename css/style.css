@@ -851,6 +851,101 @@ select.topbar-input {
     }
 }
 
+/* ===== Inline Table Editing ===== */
+
+.table-result tr.row-editing {
+    box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.4);
+}
+
+.table-result tr.row-editing td.cell-editable {
+    cursor: text;
+}
+
+.table-result tr.row-editing td.cell-editable:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: -2px;
+    background: rgba(59, 130, 246, 0.14) !important;
+    color: #e2e8f0 !important;
+}
+
+.table-result td.cell-editable {
+    min-width: 60px;
+}
+
+.table-result td.cell-modified {
+    background: rgba(234, 179, 8, 0.15) !important;
+    color: #fde68a !important;
+    font-style: normal !important;
+}
+
+.table-result td.cell-modified:focus {
+    background: rgba(234, 179, 8, 0.25) !important;
+    outline-color: #ca8a04 !important;
+}
+
+.edit-commit-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 16px;
+    background: #0d1b2e;
+    border-bottom: 1px solid #1e3a5f;
+    font-size: 12px;
+    color: #64748b;
+    font-family: 'JetBrains Mono', monospace;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.commit-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.commit-submit-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 13px;
+    background: #16a34a;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+    font-family: 'Inter', sans-serif;
+}
+
+.commit-submit-btn:hover:not(:disabled) {
+    background: #15803d;
+}
+
+.commit-submit-btn:disabled {
+    background: #1a2e20;
+    color: #4b5563;
+    cursor: not-allowed;
+}
+
+.commit-revert-btn {
+    padding: 4px 10px;
+    background: transparent;
+    color: #64748b;
+    border: 1px solid #334155;
+    border-radius: 5px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'Inter', sans-serif;
+}
+
+.commit-revert-btn:hover {
+    border-color: #94a3b8;
+    color: #94a3b8;
+}
+
 @media (max-width: 768px) {
     .playground {
         padding: 12px;
