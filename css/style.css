@@ -958,7 +958,7 @@ select.topbar-input {
   justify-content: space-between;
   padding: 7px 12px;
   background: #f0fdf4;
-  border-bottom: 1px solid #bbf7d0;
+  border-top: 1px solid #bbf7d0;
   font-size: 13px;
   color: #166534;
   font-family: var(--f-mono);
@@ -1167,7 +1167,7 @@ select.topbar-input {
 /* Commit bar dark */
 [data-theme="dark"] .edit-commit-bar {
   background: rgba(16,185,129,0.08);
-  border-bottom-color: rgba(16,185,129,0.2);
+  border-top-color: rgba(16,185,129,0.2);
   color: #34d399;
 }
 

@@ -233,8 +233,8 @@ function updateCommitBar() {
                     Commit
                 </button>
             </div>`;
-        const resultBody = document.querySelector('.result-body');
-        if (resultBody) resultBody.before(bar);
+        const resultContainer = document.querySelector('.result-container');
+        if (resultContainer) resultContainer.appendChild(bar);
     }
 
     document.getElementById('commit-info-text').textContent =
