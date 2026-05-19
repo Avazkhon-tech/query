@@ -135,36 +135,13 @@
                 <div class="editor-wrapper">
                     <div class="editor" id="editor"></div>
                     <ul id="autocomplete" class="autocomplete hidden"></ul>
-                </div>
-
-                <div class="editor-actions">
-                    <button class="run-btn" onclick="runQuery()">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <button class="run-btn" onclick="runQuery()" title="Run Query (Ctrl+Enter)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                             <polygon points="5 3 19 12 5 21 5 3"></polygon>
                         </svg>
-                        Run Query
+                        Run
                         <span class="kbd">Ctrl+Enter</span>
                     </button>
-                    <div class="view-toggles">
-                        <button id="btn-json" class="view-btn active" onclick="switchView('json')">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <polyline points="16 18 22 12 16 6"></polyline>
-                                <polyline points="8 6 2 12 8 18"></polyline>
-                            </svg>
-                            JSON
-                        </button>
-                        <button id="btn-table" class="view-btn" onclick="switchView('table')">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <rect x="3" y="3" width="7" height="7"></rect>
-                                <rect x="14" y="3" width="7" height="7"></rect>
-                                <rect x="14" y="14" width="7" height="7"></rect>
-                                <rect x="3" y="14" width="7" height="7"></rect>
-                            </svg>
-                            Table
-                        </button>
-                    </div>
                 </div>
 
                 <div class="playground-resize-handle" id="playground-resize"></div>
@@ -173,6 +150,26 @@
                     <div class="result-header">
                         <div id="execution-time" class="execution-time hidden"></div>
                         <div id="result-count" class="result-count hidden"></div>
+                        <div class="view-toggles">
+                            <button id="btn-json" class="view-btn active" onclick="switchView('json')">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <polyline points="16 18 22 12 16 6"></polyline>
+                                    <polyline points="8 6 2 12 8 18"></polyline>
+                                </svg>
+                                JSON
+                            </button>
+                            <button id="btn-table" class="view-btn" onclick="switchView('table')">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <rect x="3" y="3" width="7" height="7"></rect>
+                                    <rect x="14" y="3" width="7" height="7"></rect>
+                                    <rect x="14" y="14" width="7" height="7"></rect>
+                                    <rect x="3" y="14" width="7" height="7"></rect>
+                                </svg>
+                                Table
+                            </button>
+                        </div>
                         <button id="copy-btn" class="copy-btn hidden" onclick="copyResult()"
                             title="Copy JSON (Ctrl + Shift + C)">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
