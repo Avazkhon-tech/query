@@ -10,7 +10,7 @@ window.connect = async function () {
 };
 
 window.runQuery = async function () {
-    const rawQuery = document.getElementById('editor').innerText;
+    const rawQuery = window.cmEditor ? window.cmEditor.getValue() : '';
     const cleanQuery = rawQuery.trim();
     const result = document.getElementById('result');
     const timeDiv = document.getElementById('execution-time');

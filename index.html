@@ -14,6 +14,14 @@
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet">
 
+    <!-- CodeMirror 5 (defer keeps load order with app scripts) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/sql/sql.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js" defer></script>
+
     <script src="./js/state.js" defer></script>
     <script src="./js/api.js" defer></script>
     <script src="./js/renderer.js" defer></script>
@@ -125,7 +133,7 @@
 
             <div class="playground">
                 <div class="editor-wrapper">
-                    <div class="editor" id="editor" contenteditable="true"></div>
+                    <div class="editor" id="editor"></div>
                     <ul id="autocomplete" class="autocomplete hidden"></ul>
                 </div>
 

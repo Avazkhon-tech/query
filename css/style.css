@@ -481,32 +481,20 @@ select.topbar-input {
   overflow: hidden;
 }
 
-/* ─── Editor ──────────────────────────────── */
+/* ─── Editor (CodeMirror container) ──────────── */
 
 .editor-wrapper { position: relative; }
 
 .editor {
-  min-height: 112px;
-  max-height: 360px;
-  padding: 14px 16px;
-  font-size: 15px;
   border: 1px solid var(--b1);
-  background: var(--bg);
-  overflow: auto;
-  white-space: pre-wrap;
-  font-family: var(--f-mono);
-  line-height: 1.85;
-  outline: none;
-  tab-size: 4;
   border-radius: var(--r-lg);
-  color: var(--t0);
-  caret-color: var(--accent);
-  transition: border-color 0.15s, box-shadow 0.15s;
   box-shadow: var(--s1);
+  transition: border-color 0.15s, box-shadow 0.15s;
+  overflow: hidden;
   position: relative;
 }
 
-.editor:focus {
+.editor:focus-within {
   border-color: var(--accent-lt);
   box-shadow: 0 0 0 3px var(--accent-dim), var(--s1);
 }
@@ -517,9 +505,92 @@ select.topbar-input {
   bottom: 0; right: 0;
   width: 14px; height: 14px;
   cursor: se-resize;
+  z-index: 10;
   background: linear-gradient(135deg, transparent 50%, var(--b2) 50%);
   border-bottom-right-radius: var(--r-lg);
+  pointer-events: none;
 }
+
+/* CodeMirror base */
+.editor .CodeMirror {
+  font-family: var(--f-mono);
+  font-size: 15px;
+  line-height: 1.85;
+  height: 150px;
+  border: none;
+}
+
+.editor .CodeMirror-scroll {
+  padding-bottom: 6px;
+}
+
+.editor .CodeMirror-lines {
+  padding: 10px 0;
+}
+
+.editor .CodeMirror-line {
+  padding: 0 14px;
+}
+
+.editor .CodeMirror-gutters {
+  border-right: 1px solid var(--b1);
+  padding-right: 2px;
+}
+
+.editor .CodeMirror-linenumber {
+  font-size: 12px;
+  padding: 0 10px 0 8px;
+  min-width: 28px;
+}
+
+.editor .CodeMirror-cursor {
+  border-left-width: 2px;
+}
+
+/* ── Light theme ─────────────────────────────── */
+.cm-s-query-light.CodeMirror            { background: var(--bg); color: #1a1a1a; }
+.cm-s-query-light .CodeMirror-gutters   { background: var(--bg-1); }
+.cm-s-query-light .CodeMirror-linenumber { color: var(--t3); }
+.cm-s-query-light .CodeMirror-cursor    { border-left-color: var(--accent); }
+.cm-s-query-light .CodeMirror-selected  { background: rgba(29,78,216,0.13); }
+.cm-s-query-light .CodeMirror-activeline-background { background: rgba(29,78,216,0.04); }
+.cm-s-query-light .CodeMirror-matchingbracket {
+  color: var(--accent) !important; font-weight: bold;
+  outline: 1px solid var(--accent-lt); border-radius: 2px;
+}
+
+.cm-s-query-light .cm-keyword  { color: #0033b3; font-weight: 600; }
+.cm-s-query-light .cm-builtin  { color: #0033b3; font-weight: 600; }
+.cm-s-query-light .cm-string   { color: #067d17; }
+.cm-s-query-light .cm-string-2 { color: #067d17; }
+.cm-s-query-light .cm-number   { color: #1750eb; }
+.cm-s-query-light .cm-comment  { color: #8c8c8c; font-style: italic; }
+.cm-s-query-light .cm-operator { color: #0033b3; }
+.cm-s-query-light .cm-atom     { color: #871094; }
+.cm-s-query-light .cm-variable { color: #1a1a1a; }
+.cm-s-query-light .cm-meta     { color: var(--t2); }
+
+/* ── Dark theme (Darcula-inspired) ───────────── */
+.cm-s-query-dark.CodeMirror            { background: var(--bg); color: #a9b7c6; }
+.cm-s-query-dark .CodeMirror-gutters   { background: var(--bg-2); }
+.cm-s-query-dark .CodeMirror-linenumber { color: var(--t2); }
+.cm-s-query-dark .CodeMirror-cursor    { border-left-color: var(--accent-lt); }
+.cm-s-query-dark .CodeMirror-selected  { background: rgba(59,130,246,0.22); }
+.cm-s-query-dark .CodeMirror-activeline-background { background: rgba(255,255,255,0.04); }
+.cm-s-query-dark .CodeMirror-matchingbracket {
+  color: #ffc66d !important; font-weight: bold; outline: 1px solid #ffc66d; border-radius: 2px;
+}
+
+.cm-s-query-dark .cm-keyword  { color: #cc7832; font-weight: 600; }
+.cm-s-query-dark .cm-builtin  { color: #cc7832; font-weight: 600; }
+.cm-s-query-dark .cm-string   { color: #6a8759; }
+.cm-s-query-dark .cm-string-2 { color: #6a8759; }
+.cm-s-query-dark .cm-number   { color: #6897bb; }
+.cm-s-query-dark .cm-comment  { color: #808080; font-style: italic; }
+.cm-s-query-dark .cm-operator { color: #cc7832; }
+.cm-s-query-dark .cm-atom     { color: #9876aa; }
+.cm-s-query-dark .cm-variable { color: #a9b7c6; }
+.cm-s-query-dark .cm-meta     { color: var(--t2); }
 
 /* ─── Editor Actions ──────────────────────── */
 
@@ -949,6 +1020,7 @@ select.topbar-input {
 .autocomplete li span:last-child        { opacity: 0.45; font-size: 11px; }
 .autocomplete li.active span:last-child,
 .autocomplete li:hover  span:last-child { opacity: 0.65; }
+.ac-type { float: right; font-size: 11px; opacity: 0.45; margin-left: 8px; }
 
 /* ─── Utilities ────────────────────────────── */
 

@@ -39,8 +39,7 @@ async function loadDbObjects() {
             `;
 
             li.ondblclick = () => {
-                const q = `SELECT * FROM ${r.table_name} LIMIT 50;`;
-                if (window.editor) insertQuery(q); else document.getElementById('editor').innerText = q;
+                if (window.cmEditor) window.cmEditor.setValue(`SELECT * FROM ${r.table_name} LIMIT 50;`);
                 window.runQuery();
             };
             if (r.table_type === 'BASE TABLE') tables.appendChild(li);
@@ -68,8 +67,7 @@ async function loadDbObjects() {
             `;
 
             li.ondblclick = () => {
-                const q = `SELECT * FROM ${r.matviewname} LIMIT 10;`;
-                if (window.editor) insertQuery(q); else document.getElementById('editor').innerText = q;
+                if (window.cmEditor) window.cmEditor.setValue(`SELECT * FROM ${r.matviewname} LIMIT 10;`);
                 window.runQuery();
             };
             mviews.appendChild(li);
@@ -86,9 +84,8 @@ async function loadDbObjects() {
             li.textContent = r.indexname;
             li.setAttribute('data-name', r.indexname.toLowerCase());
             li.ondblclick = () => {
-                const escapedIndexName = r.indexname.replace(/'/g, "''");
-                const q = `-- Index info\nSELECT * FROM pg_indexes WHERE indexname = '${escapedIndexName}';`;
-                if (window.editor) insertQuery(q); else document.getElementById('editor').innerText = q;
+                const safe = r.indexname.replace(/'/g, "''");
+                if (window.cmEditor) window.cmEditor.setValue(`SELECT * FROM pg_indexes WHERE indexname = '${safe}';`);
                 window.runQuery();
             };
             indexes.appendChild(li);
@@ -103,9 +100,7 @@ window.runCount = async function (tableName, btn) {
     countVal.textContent = '...';
 
     const query = `SELECT count(*) as total FROM ${tableName};`;
-    if (window.editor) {
-        document.getElementById('editor').innerText = query;
-    }
+    if (window.cmEditor) window.cmEditor.setValue(query);
 
     // We execute the query normally so user sees it in result area
     await window.runQuery();

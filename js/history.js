@@ -64,9 +64,8 @@ window.renderHistory = function () {
         li.addEventListener('mouseleave', closeHistoryPreview);
 
         li.onclick = () => {
-            const editor = document.getElementById('editor');
-            if (editor) {
-                editor.innerText = item.query;
+            if (window.cmEditor) {
+                window.cmEditor.setValue(item.query);
                 window.runQuery();
             }
         };

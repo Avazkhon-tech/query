@@ -10,7 +10,7 @@ window.switchView = function (view) {
 };
 
 function insertQuery(q) {
-    document.getElementById('editor').innerText = q;
+    if (window.cmEditor) window.cmEditor.setValue(q);
     window.runQuery();
 }
 
@@ -29,6 +29,7 @@ window.addEventListener("DOMContentLoaded", () => {
         document.documentElement.dataset.theme = theme;
         document.getElementById('icon-moon').style.display = theme === 'dark' ? 'none' : '';
         document.getElementById('icon-sun').style.display  = theme === 'dark' ? '' : 'none';
+        if (window.cmEditor) window.cmEditor.setOption('theme', theme === 'dark' ? 'query-dark' : 'query-light');
     }
 
     const savedToken = localStorage.getItem('jwt');
@@ -154,7 +155,7 @@ window.addEventListener("DOMContentLoaded", () => {
     document.addEventListener('mousemove', (e) => {
         if (!isResizing) return;
         const newHeight = e.clientY - editorEl.getBoundingClientRect().top;
-        if (newHeight > 50) editorEl.style.height = newHeight + 'px';
+        if (newHeight > 50 && window.cmEditor) window.cmEditor.setSize(null, newHeight);
     });
     document.addEventListener('mouseup', () => isResizing = false);
 
@@ -197,15 +198,10 @@ window.addEventListener("DOMContentLoaded", () => {
         // Focus Query Console: Alt + Q
         if (e.altKey && e.key.toLowerCase() === 'q') {
             e.preventDefault();
-            const editor = document.getElementById('editor');
-            if (editor) {
-                editor.focus();
-                const range = document.createRange();
-                range.selectNodeContents(editor);
-                range.collapse(false);
-                const sel = window.getSelection();
-                sel.removeAllRanges();
-                sel.addRange(range);
+            if (window.cmEditor) {
+                window.cmEditor.focus();
+                const last = window.cmEditor.lastLine();
+                window.cmEditor.setCursor({ line: last, ch: window.cmEditor.getLine(last).length });
             }
         }
 
@@ -249,7 +245,7 @@ window.addEventListener("DOMContentLoaded", () => {
     let keyBuffer = '';
     window.addEventListener('keydown', (e) => {
         // Only track if not in an input
-        if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName) || document.activeElement.id === 'editor') {
+        if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName) || document.getElementById('editor').contains(document.activeElement)) {
             return;
         }
 

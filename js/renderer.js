@@ -252,7 +252,7 @@ window.revertAllChanges = function () {
 };
 
 function extractTableName() {
-    const q = document.getElementById('editor').innerText.trim();
+    const q = window.cmEditor ? window.cmEditor.getValue().trim() : '';
     const m = q.match(/\bFROM\s+["'`]?(\w+)["'`]?/i);
     return m ? m[1] : null;
 }
