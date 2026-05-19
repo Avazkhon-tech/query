@@ -175,7 +175,7 @@ window.addEventListener('DOMContentLoaded', () => {
     // ── Main change listener ─────────────────────────────────────
 
     window.cmEditor.on('change', async (cm, change) => {
-        if (change.origin === 'setValue' || change.origin === '+delete') {
+        if (change.origin === 'setValue') {
             hideDropdown(); return;
         }
 
@@ -211,10 +211,6 @@ window.addEventListener('DOMContentLoaded', () => {
             (typeof k === 'string' ? k : k.label).toLowerCase().startsWith(word.toLowerCase())
         );
         matches.length ? showDropdown(matches) : hideDropdown();
-    });
-
-    window.cmEditor.on('cursorActivity', () => {
-        if (!dropdown.classList.contains('hidden')) hideDropdown();
     });
 
     // Click to select from dropdown

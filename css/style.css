@@ -978,6 +978,54 @@ select.topbar-input {
 
 .table-result td.cell-editable { min-width: 60px; }
 .table-result td.cell-date { color: var(--accent-lt); font-size: 13px; }
+.table-result td.cell-date:hover { text-decoration: underline dotted; }
+
+/* Date picker popup */
+.date-picker-popup {
+  position: fixed;
+  z-index: 9999;
+  background: #1a2230;
+  border: 1px solid #3a4f66;
+  border-radius: 7px;
+  padding: 10px 12px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.45);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dp-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.dp-sel, .dp-num {
+  background: #253040;
+  border: 1px solid #3a4f66;
+  color: #cdd6f4;
+  border-radius: 4px;
+  padding: 3px 6px;
+  font-size: 13px;
+  font-family: var(--f-mono);
+}
+
+.dp-sel:focus, .dp-num:focus {
+  outline: none;
+  border-color: var(--accent-lt);
+}
+
+.dp-day  { width: 58px; }
+.dp-month { flex: 1; min-width: 110px; }
+.dp-year  { width: 70px; }
+.dp-time  { width: 52px; text-align: center; }
+
+.dp-sep {
+  color: #6b7a8d;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 0 1px;
+}
 
 .table-result td.cell-modified {
   background: #fef3c7 !important;

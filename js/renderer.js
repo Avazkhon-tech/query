@@ -1,6 +1,163 @@
 let pendingEdits = new Map(); // rowIndex -> { original: {}, changes: {} }
+let activeDatePicker = null;
 
 const DATE_COL_RE = /date|time|stamp|created|modified|updated|deleted|published|expires?|birth|start|end|at$/i;
+const DATE_STRING_RE = /^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?)?/;
+
+function parseDateStr(str) {
+    const m = String(str).match(/^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d+))?)?)?/);
+    if (!m) return null;
+    return {
+        year: parseInt(m[1]),
+        month: parseInt(m[2]),
+        day: parseInt(m[3]),
+        hour: m[4] != null ? parseInt(m[4]) : 0,
+        min: m[5] != null ? parseInt(m[5]) : 0,
+        sec: m[6] != null ? parseInt(m[6]) : 0,
+        frac: m[7] || null,
+        hasTime: m[4] != null,
+    };
+}
+
+function showDatePicker(td, rowIndex, originalRow, col) {
+    if (activeDatePicker) {
+        activeDatePicker.remove();
+        activeDatePicker = null;
+    }
+
+    const rawVal = originalRow[col];
+    const displayText = td.textContent;
+    const parsed = parseDateStr(typeof rawVal === 'number' ? displayText : rawVal);
+    if (!parsed) return;
+
+    const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const pad = n => String(n).padStart(2, '0');
+
+    const popup = document.createElement('div');
+    popup.className = 'date-picker-popup';
+
+    const daySelect = document.createElement('select');
+    daySelect.className = 'dp-sel dp-day';
+    for (let d = 1; d <= 31; d++) {
+        const opt = document.createElement('option');
+        opt.value = d;
+        opt.textContent = d;
+        if (d === parsed.day) opt.selected = true;
+        daySelect.appendChild(opt);
+    }
+
+    const monthSelect = document.createElement('select');
+    monthSelect.className = 'dp-sel dp-month';
+    MONTHS.forEach((name, i) => {
+        const opt = document.createElement('option');
+        opt.value = i + 1;
+        opt.textContent = name;
+        if (i + 1 === parsed.month) opt.selected = true;
+        monthSelect.appendChild(opt);
+    });
+
+    const yearInput = document.createElement('input');
+    yearInput.type = 'number';
+    yearInput.className = 'dp-num dp-year';
+    yearInput.value = parsed.year;
+    yearInput.min = 1900;
+    yearInput.max = 2100;
+
+    const dateRow = document.createElement('div');
+    dateRow.className = 'dp-row';
+    dateRow.append(daySelect, monthSelect, yearInput);
+    popup.appendChild(dateRow);
+
+    if (parsed.hasTime) {
+        const hourInput = document.createElement('input');
+        hourInput.type = 'number';
+        hourInput.className = 'dp-num dp-time';
+        hourInput.value = parsed.hour;
+        hourInput.min = 0; hourInput.max = 23;
+
+        const minInput = document.createElement('input');
+        minInput.type = 'number';
+        minInput.className = 'dp-num dp-time';
+        minInput.value = parsed.min;
+        minInput.min = 0; minInput.max = 59;
+
+        const secInput = document.createElement('input');
+        secInput.type = 'number';
+        secInput.className = 'dp-num dp-time';
+        secInput.value = parsed.sec;
+        secInput.min = 0; secInput.max = 59;
+
+        const timeRow = document.createElement('div');
+        timeRow.className = 'dp-row';
+        const s1 = document.createElement('span'); s1.className = 'dp-sep'; s1.textContent = ':';
+        const s2 = document.createElement('span'); s2.className = 'dp-sep'; s2.textContent = ':';
+        timeRow.append(hourInput, s1, minInput, s2, secInput);
+        popup.appendChild(timeRow);
+
+        [daySelect, monthSelect, yearInput, hourInput, minInput, secInput].forEach(el => el.addEventListener('input', sync));
+        popup._inputs = { daySelect, monthSelect, yearInput, hourInput, minInput, secInput };
+    } else {
+        [daySelect, monthSelect, yearInput].forEach(el => el.addEventListener('input', sync));
+        popup._inputs = { daySelect, monthSelect, yearInput };
+    }
+
+    document.body.appendChild(popup);
+    activeDatePicker = popup;
+
+    const rect = td.getBoundingClientRect();
+    popup.style.top = (rect.bottom + 4) + 'px';
+    popup.style.left = rect.left + 'px';
+    requestAnimationFrame(() => {
+        const pw = popup.offsetWidth;
+        if (rect.left + pw > window.innerWidth - 8) {
+            popup.style.left = Math.max(8, window.innerWidth - pw - 8) + 'px';
+        }
+    });
+
+    function sync() {
+        const { daySelect, monthSelect, yearInput, hourInput, minInput, secInput } = popup._inputs;
+        const y = String(yearInput.value).padStart(4, '0');
+        const mo = pad(monthSelect.value);
+        const d = pad(daySelect.value);
+        let newVal;
+        if (parsed.hasTime) {
+            const h = pad(hourInput.value);
+            const mi = pad(minInput.value);
+            const s = pad(secInput.value);
+            const frac = parsed.frac ? '.' + parsed.frac : '';
+            newVal = `${y}-${mo}-${d} ${h}:${mi}:${s}${frac}`;
+        } else {
+            newVal = `${y}-${mo}-${d}`;
+        }
+
+        td.textContent = newVal;
+        if (newVal !== displayText) {
+            if (!pendingEdits.has(rowIndex)) pendingEdits.set(rowIndex, { original: originalRow, changes: {} });
+            pendingEdits.get(rowIndex).changes[col] = newVal;
+            td.classList.add('cell-modified');
+        } else {
+            td.classList.remove('cell-modified');
+            if (pendingEdits.has(rowIndex)) {
+                delete pendingEdits.get(rowIndex).changes[col];
+                if (!Object.keys(pendingEdits.get(rowIndex).changes).length) pendingEdits.delete(rowIndex);
+            }
+        }
+        updateCommitBar();
+    }
+
+    const onOutside = e => {
+        if (!popup.contains(e.target) && e.target !== td) {
+            popup.remove();
+            activeDatePicker = null;
+            document.removeEventListener('mousedown', onOutside, true);
+        }
+    };
+    setTimeout(() => document.addEventListener('mousedown', onOutside, true), 0);
+
+    popup.addEventListener('keydown', e => {
+        if (e.key === 'Escape') { popup.remove(); activeDatePicker = null; }
+    });
+}
 
 function formatTimestamp(val, colName) {
     if (!DATE_COL_RE.test(colName)) return null;
@@ -115,11 +272,23 @@ function renderTable(data, container) {
                         td.textContent = formatted;
                         td.title = String(val);
                         td.classList.add('cell-date');
+                    } else if (DATE_COL_RE.test(h) && typeof val === 'string' && DATE_STRING_RE.test(val)) {
+                        td.textContent = val;
+                        td.classList.add('cell-date');
                     } else {
                         td.textContent = val;
                     }
                 }
             }
+            if (td.classList.contains('cell-date')) {
+                td.style.cursor = 'pointer';
+                td.addEventListener('click', e => {
+                    e.stopPropagation();
+                    showDatePicker(td, rowIndex, row, h);
+                });
+                td.addEventListener('dblclick', e => e.stopPropagation());
+            }
+
             tr.appendChild(td);
         });
         tr.addEventListener('dblclick', (e) => enterEditMode(tr, rowIndex, row, e.target.closest('td')));
