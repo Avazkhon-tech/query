@@ -71,10 +71,20 @@ function renderTable(data, container) {
             const td = document.createElement('td');
             const val = row[h];
             td.dataset.col = h;
-            td.textContent = (val === null) ? 'NULL' : (typeof val === 'object' ? JSON.stringify(val) : val);
-            if (val === null) {
-                td.style.color = '#ce916a';
-                td.style.fontStyle = 'italic';
+
+            if (typeof val === 'boolean') {
+                const badge = makeBoolBadge(val);
+                td.appendChild(badge);
+                badge.addEventListener('click', e => {
+                    e.stopPropagation();
+                    toggleBoolCell(td, badge, rowIndex, row, h);
+                });
+            } else {
+                td.textContent = (val === null) ? 'NULL' : (typeof val === 'object' ? JSON.stringify(val) : val);
+                if (val === null) {
+                    td.style.color = '#ce916a';
+                    td.style.fontStyle = 'italic';
+                }
             }
             tr.appendChild(td);
         });
@@ -87,6 +97,40 @@ function renderTable(data, container) {
     container.appendChild(wrapper);
 }
 
+function makeBoolBadge(val) {
+    const span = document.createElement('span');
+    span.className = `bool-badge bool-${val}`;
+    span.textContent = val ? 'true' : 'false';
+    return span;
+}
+
+function toggleBoolCell(td, badge, rowIndex, originalRow, col) {
+    const origVal = originalRow[col]; // original boolean
+    const current = badge.classList.contains('bool-true');
+    const newVal = !current;
+
+    badge.className = `bool-badge bool-${newVal}`;
+    badge.textContent = newVal ? 'true' : 'false';
+
+    if (newVal !== origVal) {
+        if (!pendingEdits.has(rowIndex)) {
+            pendingEdits.set(rowIndex, { original: originalRow, changes: {} });
+        }
+        pendingEdits.get(rowIndex).changes[col] = String(newVal);
+        td.classList.add('cell-modified');
+    } else {
+        td.classList.remove('cell-modified');
+        if (pendingEdits.has(rowIndex)) {
+            delete pendingEdits.get(rowIndex).changes[col];
+            if (!Object.keys(pendingEdits.get(rowIndex).changes).length) {
+                pendingEdits.delete(rowIndex);
+            }
+        }
+    }
+
+    updateCommitBar();
+}
+
 function enterEditMode(tr, rowIndex, originalRow) {
     if (tr.classList.contains('row-editing')) return;
     tr.classList.add('row-editing');
@@ -96,6 +140,10 @@ function enterEditMode(tr, rowIndex, originalRow) {
     tds.forEach((td, tdIndex) => {
         const col = td.dataset.col;
         const origVal = originalRow[col];
+
+        // Boolean cells are already toggleable — skip contenteditable
+        if (typeof origVal === 'boolean') return;
+
         const displayText = origVal === null ? '' : (typeof origVal === 'object' ? JSON.stringify(origVal) : String(origVal));
 
         td.textContent = displayText;

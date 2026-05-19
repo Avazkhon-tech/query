@@ -904,6 +904,39 @@ select.topbar-input {
   color: var(--t0) !important;
 }
 
+/* Boolean toggle badge */
+.bool-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--f-ui);
+  cursor: pointer;
+  user-select: none;
+  transition: filter 0.12s, transform 0.1s;
+  border: 1px solid transparent;
+}
+
+.bool-badge:hover  { filter: brightness(0.88); }
+.bool-badge:active { transform: scale(0.93); }
+
+.bool-true {
+  background: var(--green-dim);
+  color: var(--green);
+  border-color: rgba(4,120,87,0.22);
+}
+
+.bool-false {
+  background: var(--amber-dim);
+  color: var(--amber);
+  border-color: rgba(217,119,6,0.22);
+}
+
+[data-theme="dark"] .bool-true  { color: var(--green-lt); }
+[data-theme="dark"] .bool-false { color: #fbbf24; }
+
 .table-result td.cell-editable { min-width: 60px; }
 
 .table-result td.cell-modified {
