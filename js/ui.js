@@ -151,22 +151,36 @@ window.addEventListener("DOMContentLoaded", () => {
         });
     })();
 
-    // Editor Resize
-    const editorEl = document.getElementById('editor');
-    let isResizing = false;
-    editorEl.addEventListener('mousedown', (e) => {
-        const rect = editorEl.getBoundingClientRect();
-        if (e.clientX > rect.right - 20 && e.clientY > rect.bottom - 20) {
-            isResizing = true;
+    // Editor vertical resize (drag bar between editor and result)
+    (function () {
+        const handle = document.getElementById('playground-resize');
+        if (!handle) return;
+        let dragging = false, startY, startH;
+
+        handle.addEventListener('mousedown', e => {
+            dragging = true;
+            startY = e.clientY;
+            startH = window.cmEditor ? window.cmEditor.getWrapperElement().offsetHeight : 150;
+            handle.classList.add('dragging');
+            document.body.style.cursor = 'row-resize';
+            document.body.style.userSelect = 'none';
             e.preventDefault();
-        }
-    });
-    document.addEventListener('mousemove', (e) => {
-        if (!isResizing) return;
-        const newHeight = e.clientY - editorEl.getBoundingClientRect().top;
-        if (newHeight > 50 && window.cmEditor) window.cmEditor.setSize(null, newHeight);
-    });
-    document.addEventListener('mouseup', () => isResizing = false);
+        });
+
+        document.addEventListener('mousemove', e => {
+            if (!dragging) return;
+            const newH = Math.max(60, startH + (e.clientY - startY));
+            if (window.cmEditor) window.cmEditor.setSize(null, newH);
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (!dragging) return;
+            dragging = false;
+            handle.classList.remove('dragging');
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+        });
+    })();
 
     // Global Keyboard Shortcuts
     window.addEventListener('keydown', (e) => {

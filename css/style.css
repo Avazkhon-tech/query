@@ -499,17 +499,6 @@ select.topbar-input {
   box-shadow: 0 0 0 3px var(--accent-dim), var(--s1);
 }
 
-.editor::after {
-  content: '';
-  position: absolute;
-  bottom: 0; right: 0;
-  width: 14px; height: 14px;
-  cursor: se-resize;
-  z-index: 10;
-  background: linear-gradient(135deg, transparent 50%, var(--b2) 50%);
-  border-bottom-right-radius: var(--r-lg);
-  pointer-events: none;
-}
 
 /* CodeMirror base */
 .editor .CodeMirror {
@@ -591,6 +580,42 @@ select.topbar-input {
 .cm-s-query-dark .cm-atom     { color: #9876aa; }
 .cm-s-query-dark .cm-variable { color: #a9b7c6; }
 .cm-s-query-dark .cm-meta     { color: var(--t2); }
+
+/* ─── Playground vertical resize ─────────── */
+
+.playground-resize-handle {
+  height: 6px;
+  flex-shrink: 0;
+  cursor: row-resize;
+  position: relative;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.playground-resize-handle::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 48px;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--b2);
+  opacity: 0.6;
+  transition: opacity 0.15s, width 0.15s;
+}
+
+.playground-resize-handle:hover,
+.playground-resize-handle.dragging {
+  background: var(--accent-dim);
+}
+
+.playground-resize-handle:hover::after,
+.playground-resize-handle.dragging::after {
+  opacity: 1;
+  width: 64px;
+}
 
 /* ─── Editor Actions ──────────────────────── */
 
