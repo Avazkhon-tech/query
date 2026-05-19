@@ -70,6 +70,7 @@ body {
   color: var(--t0);
   overflow: hidden;
   font-size: 14px;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -430,7 +431,7 @@ select.topbar-input {
   overflow: auto;
   white-space: pre-wrap;
   font-family: var(--f-mono);
-  line-height: 1.7;
+  line-height: 1.85;
   outline: none;
   tab-size: 4;
   border-radius: var(--r-lg);
@@ -669,7 +670,7 @@ select.topbar-input {
   color: var(--t0);
   font-family: var(--f-mono);
   font-size: 14px;
-  line-height: 1.75;
+  line-height: 1.9;
   margin: 0;
   background: transparent;
 }
@@ -726,7 +727,7 @@ select.topbar-input {
   background: var(--bg-2) !important;
   color: var(--accent) !important;
   font-weight: 700;
-  padding: 10px 14px;
+  padding: 12px 14px;
   text-align: left;
   border-bottom: 2px solid var(--b2) !important;
   border-right: 1px solid var(--b1) !important;
@@ -738,7 +739,7 @@ select.topbar-input {
 }
 
 .table-result td {
-  padding: 9px 14px;
+  padding: 11px 14px;
   border-bottom: 1px solid var(--b0) !important;
   border-right: 1px solid var(--b0) !important;
   color: var(--t0) !important;
@@ -920,6 +921,85 @@ select.topbar-input {
 @keyframes dropIn {
   from { opacity: 0; transform: translateY(-7px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Dark Mode ────────────────────────────── */
+
+[data-theme="dark"] {
+  --bg:         #0f172a;
+  --bg-1:       #1e293b;
+  --bg-2:       #162032;
+  --bg-3:       #273449;
+
+  --b0:         #1e293b;
+  --b1:         #273449;
+  --b2:         #334155;
+  --b3:         #475569;
+
+  --accent:     #3b82f6;
+  --accent-lt:  #60a5fa;
+  --accent-dk:  #2563eb;
+  --accent-dim: rgba(59,130,246,0.1);
+  --accent-mid: rgba(59,130,246,0.2);
+
+  --green:      #10b981;
+  --green-lt:   #34d399;
+  --green-dim:  rgba(16,185,129,0.1);
+
+  --amber:      #f59e0b;
+  --amber-dim:  rgba(245,158,11,0.12);
+
+  --t0:         #f1f5f9;
+  --t1:         #94a3b8;
+  --t2:         #64748b;
+  --t3:         #334155;
+
+  --s1: 0 1px 3px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.25);
+  --s2: 0 4px 14px rgba(0,0,0,0.45), 0 2px 4px rgba(0,0,0,0.3);
+}
+
+[data-theme="dark"] select.topbar-input {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+/* JSON dark */
+[data-theme="dark"] .key     { color: #60a5fa; }
+[data-theme="dark"] .string  { color: #f59e0b; }
+[data-theme="dark"] .number  { color: #34d399; }
+[data-theme="dark"] .boolean { color: #f87171; }
+[data-theme="dark"] .null    { color: var(--t2); }
+
+/* Table dark */
+[data-theme="dark"] .table-result .table {
+  --bs-table-bg:           transparent;
+  --bs-table-striped-bg:   var(--bg-1);
+  --bs-table-hover-bg:     rgba(59,130,246,0.1);
+  --bs-table-color:        var(--t0);
+  --bs-table-border-color: var(--b1);
+  color: var(--t0) !important;
+}
+
+[data-theme="dark"] .table-result tbody tr:nth-child(even) td { background: var(--bg-1) !important; }
+[data-theme="dark"] .table-result tbody tr:hover td           { background: rgba(59,130,246,0.1) !important; }
+
+[data-theme="dark"] .table-result tr.row-editing td.cell-editable:focus {
+  background: rgba(59,130,246,0.12) !important;
+}
+
+[data-theme="dark"] .table-result td.cell-modified {
+  background: rgba(245,158,11,0.14) !important;
+  color: #fcd34d !important;
+}
+
+[data-theme="dark"] .table-result td.cell-modified:focus {
+  background: rgba(245,158,11,0.22) !important;
+}
+
+/* Commit bar dark */
+[data-theme="dark"] .edit-commit-bar {
+  background: rgba(16,185,129,0.08);
+  border-bottom-color: rgba(16,185,129,0.2);
+  color: #34d399;
 }
 
 /* ─── Responsive ───────────────────────────── */

@@ -15,6 +15,22 @@ function insertQuery(q) {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
+    // Theme
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    applyTheme(savedTheme);
+
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+        const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+        applyTheme(next);
+        localStorage.setItem('theme', next);
+    });
+
+    function applyTheme(theme) {
+        document.documentElement.dataset.theme = theme;
+        document.getElementById('icon-moon').style.display = theme === 'dark' ? 'none' : '';
+        document.getElementById('icon-sun').style.display  = theme === 'dark' ? '' : 'none';
+    }
+
     const savedToken = localStorage.getItem('jwt');
     if (savedToken) {
         document.getElementById("token").value = savedToken;
