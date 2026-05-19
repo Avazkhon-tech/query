@@ -1,3 +1,10 @@
+window.toggleResultFullscreen = function () {
+    const container = document.getElementById('result-container');
+    const isFs = container.classList.toggle('fullscreen');
+    document.getElementById('fs-expand').style.display   = isFs ? 'none' : '';
+    document.getElementById('fs-compress').style.display = isFs ? '' : 'none';
+};
+
 window.toggleSection = function (header) {
     header.parentElement.classList.toggle("open");
 };
@@ -166,6 +173,15 @@ window.addEventListener("DOMContentLoaded", () => {
             if (document.getElementById('edit-commit-bar')) {
                 e.preventDefault();
                 window.commitChanges();
+                return;
+            }
+        }
+
+        // Exit fullscreen: Escape
+        if (e.key === 'Escape') {
+            const container = document.getElementById('result-container');
+            if (container && container.classList.contains('fullscreen')) {
+                window.toggleResultFullscreen();
                 return;
             }
         }
