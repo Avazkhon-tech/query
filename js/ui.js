@@ -179,6 +179,13 @@ window.addEventListener("DOMContentLoaded", () => {
             }
         }
 
+        // Fullscreen toggle: Ctrl + Shift + F
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'f') {
+            e.preventDefault();
+            window.toggleResultFullscreen();
+            return;
+        }
+
         // Exit fullscreen: Escape
         if (e.key === 'Escape') {
             const container = document.getElementById('result-container');
