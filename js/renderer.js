@@ -88,7 +88,7 @@ function renderTable(data, container) {
             }
             tr.appendChild(td);
         });
-        tr.addEventListener('dblclick', () => enterEditMode(tr, rowIndex, row));
+        tr.addEventListener('dblclick', (e) => enterEditMode(tr, rowIndex, row, e.target.closest('td')));
         tbody.appendChild(tr);
     });
 
@@ -131,7 +131,7 @@ function toggleBoolCell(td, badge, rowIndex, originalRow, col) {
     updateCommitBar();
 }
 
-function enterEditMode(tr, rowIndex, originalRow) {
+function enterEditMode(tr, rowIndex, originalRow, clickedTd) {
     if (tr.classList.contains('row-editing')) return;
     tr.classList.add('row-editing');
 
@@ -206,7 +206,10 @@ function enterEditMode(tr, rowIndex, originalRow) {
         });
     });
 
-    tds[0]?.focus();
+    const focusTd = (clickedTd && clickedTd.contentEditable === 'true')
+        ? clickedTd
+        : tds.find(td => td.contentEditable === 'true');
+    focusTd?.focus();
 }
 
 function updateCommitBar() {
