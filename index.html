@@ -91,17 +91,10 @@
                     </svg>
                 </button>
                 <select id="apiUrlSelect" class="topbar-input">
-                    <option value="https://hc.ssv.uz/api/classificator/v1/query">hc.ssv.uz/api/classificator/v1/query
-                    </option>
-                    <option value="https://test-hc.ssv.uz/api/classificator/v1/query">
-                        test-hc.ssv.uz/api/classificator/v1/query</option>
-                    <option value="https://test2-hc.ssv.uz/api/classificator/v1/query">
-                        test2-hc.ssv.uz/api/classificator/v1/query</option>
-                    <option value="http://aistroke.ssv.uz/api/stroke/v1/query">aistroke.ssv.uz/api/stroke/v1/query
-                    </option>
-                    <option value="http://test-aistroke.ssv.uz/api/stroke/v1/query">
-                        test-aistroke.ssv.uz/api/stroke/v1/query
-                    </option>
+                    <option value="https://hc.ssv.uz/api/classificator/v1/query">screening : prod</option>
+                    <option value="https://test-hc.ssv.uz/api/classificator/v1/query">screening : dev</option>
+                    <option value="http://rs.ssv.uz/api/query">reading : prod</option>
+                    <option value="http://reading-system.med-uic.uz/api/query">reading : dev</option>
                 </select>
                 <input id="token" placeholder="JWT token (Bearer)" class="topbar-input token-input" />
                 <button id="connectBtn" class="connect-btn" onclick="connect(this)" title="Connect (Alt + C)">
