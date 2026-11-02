@@ -41,11 +41,15 @@ window.addEventListener("DOMContentLoaded", () => {
         if (window.cmEditor) window.cmEditor.setOption('theme', theme === 'dark' ? 'query-dark' : 'query-light');
     }
 
-    const savedToken = localStorage.getItem('jwt');
-    if (savedToken) {
-        document.getElementById("token").value = savedToken;
-        loadDbObjects();
+    // First run after upgrade: adopt the legacy global token for the selected environment
+    if (!localStorage.getItem(tokenKey()) && localStorage.getItem('jwt')) {
+        localStorage.setItem(tokenKey(), localStorage.getItem('jwt'));
     }
+    if (switchEnvToken()) loadDbObjects();
+
+    document.getElementById('apiUrlSelect').addEventListener('change', () => {
+        if (switchEnvToken()) loadDbObjects();
+    });
 
     renderHistory();
 
@@ -267,7 +271,7 @@ window.addEventListener("DOMContentLoaded", () => {
             if (tokenInput) {
                 const cleanToken = text.trim();
                 tokenInput.value = cleanToken;
-                localStorage.setItem('jwt', cleanToken);
+                saveToken(cleanToken);
                 tokenInput.classList.add('flash-success');
                 setTimeout(() => tokenInput.classList.remove('flash-success'), 1000);
                 window.connect();
@@ -307,4 +311,15 @@ window.addEventListener("DOMContentLoaded", () => {
             }
         });
     }
+
+    // Close run options dropdown on click outside
+    document.addEventListener('click', (e) => {
+        const runMenu = document.getElementById('run-menu');
+        const runToggle = document.getElementById('run-options-toggle');
+        if (runMenu && !runMenu.classList.contains('hidden')) {
+            if (!runMenu.contains(e.target) && (!runToggle || !runToggle.contains(e.target))) {
+                runMenu.classList.add('hidden');
+            }
+        }
+    });
 });

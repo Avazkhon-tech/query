@@ -24,7 +24,10 @@ window.addEventListener('DOMContentLoaded', () => {
     function getDotContext() {
         const cur = window.cmEditor.getCursor();
         const line = window.cmEditor.getLine(cur.line);
-        const m = line.slice(0, cur.ch).match(/(\w+)\.(\w*)$/);
+        const before = line.slice(0, cur.ch);
+        const q = before.match(/(\w+)\.(\w+)\.(\w*)$/);
+        if (q) return { schema: q[1], prefix: q[2], word: q[3] };
+        const m = before.match(/(\w+)\.(\w*)$/);
         return m ? { prefix: m[1], word: m[2] } : null;
     }
 
@@ -36,6 +39,7 @@ window.addEventListener('DOMContentLoaded', () => {
             ...[...document.querySelectorAll('#tables li')].map(pick),
             ...[...document.querySelectorAll('#views li')].map(pick),
             ...[...document.querySelectorAll('#mviews li')].map(pick),
+            ...(window.dbSchemas || []).filter(s => s !== window.currentSchema),
         ];
     }
 
@@ -43,13 +47,13 @@ window.addEventListener('DOMContentLoaded', () => {
 
     function parseAliases(sql) {
         const out = {};
-        const re = /(?:FROM|JOIN)\s+(\w+)(?:\s+(?:AS\s+)?(\w+))?/gi;
+        const re = /(?:FROM|JOIN)\s+(?:(\w+)\.)?(\w+)(?:\s+(?:AS\s+)?(\w+))?/gi;
         let m;
         while ((m = re.exec(sql)) !== null) {
-            const tbl = m[1], alias = m[2];
-            if (alias && !['ON','WHERE','SET','LEFT','RIGHT','INNER','OUTER','FULL'].includes(alias.toUpperCase()))
-                out[alias.toLowerCase()] = tbl.toLowerCase();
-            out[tbl.toLowerCase()] = tbl.toLowerCase();
+            const full = (m[1] ? m[1] + '.' : '') + m[2], alias = m[3];
+            if (alias && !['ON','WHERE','SET','LEFT','RIGHT','INNER','OUTER','FULL','USING','GROUP','ORDER','LIMIT'].includes(alias.toUpperCase()))
+                out[alias.toLowerCase()] = full.toLowerCase();
+            out[m[2].toLowerCase()] = full.toLowerCase();
         }
         return out;
     }
@@ -58,17 +62,43 @@ window.addEventListener('DOMContentLoaded', () => {
         return tableAliases[nameOrAlias.toLowerCase()] || nameOrAlias;
     }
 
-    async function fetchColumns(tableName) {
+    const unquote = s => s.replace(/^"|"$/g, '');
+
+    // Tables/views of another schema, for `schema.` completion
+    const schemaObjCache = {};
+    async function fetchSchemaObjects(schema) {
+        if (schemaObjCache[schema]) return schemaObjCache[schema];
+        try {
+            const safe = schema.replace(/'/g, "''");
+            const data = await dbQueryRaw(`SELECT table_name FROM information_schema.tables WHERE table_schema = '${safe}' ORDER BY table_name`);
+            return (schemaObjCache[schema] = data.map(r => ({ label: r.table_name, type: 'table' })));
+        } catch { return []; }
+    }
+
+    async function dbQueryRaw(sql) {
+        const url = apiUrl();
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('jwt') },
+            body: JSON.stringify({ [getQueryKey(url)]: sql })
+        });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        return Array.isArray(data) ? data : [];
+    }
+
+    async function fetchColumns(tableName, schema) {
         const token = localStorage.getItem('jwt');
         if (!token) return [];
         try {
             const url = apiUrl();
             const key = getQueryKey(url);
             const safe = tableName.replace(/'/g, "''");
+            const schemaSafe = (schema || window.currentSchema || 'public').replace(/'/g, "''");
             const res = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-                body: JSON.stringify({ [key]: `SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '${safe}'` })
+                body: JSON.stringify({ [key]: `SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = '${schemaSafe}' AND table_name = '${safe}'` })
             });
             if (!res.ok) return [];
             const data = await res.json();
@@ -183,8 +213,14 @@ window.addEventListener('DOMContentLoaded', () => {
 
         const dotCtx = getDotContext();
         if (dotCtx) {
-            const tbl  = resolveTable(dotCtx.prefix);
-            const cols = await fetchColumns(tbl);
+            let schema = dotCtx.schema;
+            let tbl = resolveTable(dotCtx.prefix);
+            if (tbl.includes('.')) [schema, tbl] = tbl.split('.');
+            const isSchema = !schema && (tableAliases[dotCtx.prefix.toLowerCase()] || dotCtx.prefix.toLowerCase()) === dotCtx.prefix.toLowerCase() &&
+                (window.dbSchemas || []).includes(dotCtx.prefix);
+            const cols = isSchema
+                ? await fetchSchemaObjects(dotCtx.prefix)
+                : await fetchColumns(unquote(tbl), schema);
             if (cols.length) {
                 const matches = dotCtx.word
                     ? cols.filter(c => c.label.toLowerCase().startsWith(dotCtx.word.toLowerCase()))

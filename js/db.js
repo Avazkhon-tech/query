@@ -1,3 +1,53 @@
+window.currentSchema = (function () { try { return localStorage.getItem('schema') || 'public'; } catch { return 'public'; } })();
+
+const sqlLit = v => "'" + String(v).replace(/'/g, "''") + "'";
+
+// Quote an identifier only when it needs it (keeps `public` queries unchanged)
+window.quoteIdent = name => /^[a-z_][a-z0-9_]*$/.test(name) ? name : '"' + String(name).replace(/"/g, '""') + '"';
+
+// Schema-qualified reference for non-public schemas
+window.qualifiedName = function (name, schema = window.currentSchema) {
+    return schema === 'public' ? window.quoteIdent(name) : `${window.quoteIdent(schema)}.${window.quoteIdent(name)}`;
+};
+
+async function dbQuery(sql) {
+    const token = localStorage.getItem('jwt');
+    const url = apiUrl();
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ [getQueryKey(url)]: sql })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+}
+
+window.loadSchemas = async function () {
+    const select = document.getElementById('schemaSelect');
+    if (!select) return;
+    try {
+        const rows = await dbQuery("SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT LIKE 'pg\\_%' AND schema_name <> 'information_schema' ORDER BY schema_name;");
+        const names = rows.map(r => r.schema_name);
+        if (!names.includes(window.currentSchema)) window.currentSchema = names.includes('public') ? 'public' : (names[0] || 'public');
+        window.dbSchemas = names;
+        select.innerHTML = '';
+        names.forEach(n => {
+            const o = document.createElement('option');
+            o.value = o.textContent = n;
+            select.appendChild(o);
+        });
+        select.value = window.currentSchema;
+    } catch (e) {
+        console.error('loadSchemas error:', e);
+    }
+};
+
+window.setSchema = function (schema) {
+    window.currentSchema = schema;
+    try { localStorage.setItem('schema', schema); } catch { }
+    loadDbObjects();
+};
+
 async function loadDbObjects() {
     const token = localStorage.getItem('jwt');
     if (!token) return;
@@ -7,6 +57,8 @@ async function loadDbObjects() {
         'Authorization': 'Bearer ' + token
     };
 
+    await window.loadSchemas();
+
     try {
         const url = apiUrl();
         const payloadKey = getQueryKey(url);
@@ -14,7 +66,7 @@ async function loadDbObjects() {
         const tvRes = await fetch(url, {
             method: 'POST',
             headers,
-            body: JSON.stringify({ [payloadKey]: "SELECT table_name, table_type FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name;" })
+            body: JSON.stringify({ [payloadKey]: `SELECT table_name, table_type FROM information_schema.tables WHERE table_schema = ${sqlLit(window.currentSchema)} ORDER BY table_name;` })
         });
         const tvData = await tvRes.json();
 
@@ -30,7 +82,7 @@ async function loadDbObjects() {
 
             li.innerHTML = `
                 <span>${r.table_name}</span>
-                <button class="count-btn" onclick="runCount('${r.table_name}', this); event.stopPropagation();" title="Get total count">
+                <button class="count-btn" onclick="runCount('${r.table_name.replace(/'/g, "\\'")}', this); event.stopPropagation();" title="Get total count">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M7 2a2 2 0 0 1 2 2v1h6V4a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h1z"></path>
                     </svg>
@@ -39,14 +91,14 @@ async function loadDbObjects() {
             `;
 
             li.ondblclick = () => {
-                if (window.cmEditor) window.cmEditor.setValue(`SELECT * FROM ${r.table_name} LIMIT 50;`);
+                if (window.cmEditor) window.cmEditor.setValue(`SELECT * FROM ${window.qualifiedName(r.table_name)} LIMIT 50;`);
                 window.runQuery();
             };
             if (r.table_type === 'BASE TABLE') tables.appendChild(li);
             else if (r.table_type === 'VIEW') views.appendChild(li);
         });
 
-        const mvRes = await fetch(url, { method: 'POST', headers, body: JSON.stringify({ [payloadKey]: "SELECT matviewname FROM pg_matviews WHERE schemaname = 'public' ORDER BY matviewname;" }) });
+        const mvRes = await fetch(url, { method: 'POST', headers, body: JSON.stringify({ [payloadKey]: `SELECT matviewname FROM pg_matviews WHERE schemaname = ${sqlLit(window.currentSchema)} ORDER BY matviewname;` }) });
         const mvData = await mvRes.json();
         const mviews = document.getElementById('mviews');
         mviews.innerHTML = '';
@@ -58,7 +110,7 @@ async function loadDbObjects() {
 
             li.innerHTML = `
                 <span>${r.matviewname}</span>
-                <button class="count-btn" onclick="runCount('${r.matviewname}', this); event.stopPropagation();" title="Get total count">
+                <button class="count-btn" onclick="runCount('${r.matviewname.replace(/'/g, "\\'")}', this); event.stopPropagation();" title="Get total count">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M7 2a2 2 0 0 1 2 2v1h6V4a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h1z"></path>
                     </svg>
@@ -67,13 +119,13 @@ async function loadDbObjects() {
             `;
 
             li.ondblclick = () => {
-                if (window.cmEditor) window.cmEditor.setValue(`SELECT * FROM ${r.matviewname} LIMIT 10;`);
+                if (window.cmEditor) window.cmEditor.setValue(`SELECT * FROM ${window.qualifiedName(r.matviewname)} LIMIT 10;`);
                 window.runQuery();
             };
             mviews.appendChild(li);
         });
 
-        const idxRes = await fetch(url, { method: 'POST', headers, body: JSON.stringify({ [payloadKey]: "SELECT indexname FROM pg_indexes WHERE schemaname = 'public' ORDER BY indexname;" }) });
+        const idxRes = await fetch(url, { method: 'POST', headers, body: JSON.stringify({ [payloadKey]: `SELECT indexname FROM pg_indexes WHERE schemaname = ${sqlLit(window.currentSchema)} ORDER BY indexname;` }) });
         const idxData = await idxRes.json();
         const indexes = document.getElementById('indexes');
         indexes.innerHTML = '';
@@ -85,7 +137,7 @@ async function loadDbObjects() {
             li.setAttribute('data-name', r.indexname.toLowerCase());
             li.ondblclick = () => {
                 const safe = r.indexname.replace(/'/g, "''");
-                if (window.cmEditor) window.cmEditor.setValue(`SELECT * FROM pg_indexes WHERE indexname = '${safe}';`);
+                if (window.cmEditor) window.cmEditor.setValue(`SELECT * FROM pg_indexes WHERE schemaname = ${sqlLit(window.currentSchema)} AND indexname = '${safe}';`);
                 window.runQuery();
             };
             indexes.appendChild(li);
@@ -99,7 +151,7 @@ window.runCount = async function (tableName, btn) {
     const countVal = btn.querySelector('.count-val');
     countVal.textContent = '...';
 
-    const query = `SELECT count(*) as total FROM ${tableName};`;
+    const query = `SELECT count(*) as total FROM ${window.qualifiedName(tableName)};`;
     if (window.cmEditor) window.cmEditor.setValue(query);
 
     // We execute the query normally so user sees it in result area

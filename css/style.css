@@ -617,13 +617,116 @@ select.topbar-input {
   width: 64px;
 }
 
-/* ─── Run button (overlaid top-right of editor) ── */
+/* ─── Editor Controls Overlay ──────────────────── */
 
-.editor-wrapper .run-btn {
+.editor-controls {
   position: absolute;
   top: 8px;
-  right: 8px;
+  right: 10px;
   z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stmt-badge {
+  padding: 3px 8px;
+  background: var(--accent-dim);
+  color: var(--accent);
+  border: 1px solid rgba(29, 78, 216, 0.18);
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--f-mono);
+  user-select: none;
+  transition: all 0.15s;
+  letter-spacing: 0.02em;
+}
+
+.editor-action-btn {
+  padding: 5px 10px;
+  background: var(--bg-1);
+  color: var(--t1);
+  border: 1px solid var(--b1);
+  border-radius: var(--r);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 12px;
+  font-family: var(--f-ui);
+  transition: all 0.14s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  box-shadow: var(--s1);
+}
+
+.editor-action-btn:hover {
+  background: var(--bg);
+  border-color: var(--b2);
+  color: var(--accent);
+}
+
+.run-btn-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.run-btn-group .run-btn {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.run-dropdown-toggle {
+  padding: 5px 6px !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.25) !important;
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+  border-top-right-radius: var(--r) !important;
+  border-bottom-right-radius: var(--r) !important;
+}
+
+.run-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background: var(--bg);
+  border: 1px solid var(--b2);
+  border-radius: var(--r-md);
+  box-shadow: var(--s2);
+  min-width: 230px;
+  z-index: 100;
+  overflow: hidden;
+  padding: 4px 0;
+}
+
+.run-menu-item {
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-family: var(--f-ui);
+  color: var(--t0);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+
+.run-menu-item:hover {
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+.run-menu-kbd {
+  margin-left: auto;
+  font-size: 10.5px;
+  font-family: var(--f-mono);
+  color: var(--t2);
+  background: var(--bg-2);
+  padding: 1px 5px;
+  border-radius: 3px;
+  border: 1px solid var(--b1);
 }
 
 .run-btn {
@@ -649,6 +752,15 @@ select.topbar-input {
 }
 
 .run-btn:active { transform: scale(0.97); }
+
+/* CodeMirror Active Statement Highlight */
+.cm-s-query-light .cm-active-statement {
+  background: rgba(29, 78, 216, 0.07) !important;
+}
+
+.cm-s-query-dark .cm-active-statement {
+  background: rgba(59, 130, 246, 0.12) !important;
+}
 
 .kbd {
   padding: 2px 6px;
@@ -1275,3 +1387,169 @@ select.topbar-input {
   .topbar       { flex-wrap: wrap; gap: 6px; }
   .topbar-input { width: 100% !important; max-width: none !important; }
 }
+
+/* ─── OAuth token modal ───────────────────── */
+
+.auth-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.auth-modal {
+  background: var(--bg);
+  border: 1px solid var(--b1);
+  border-radius: var(--r-lg);
+  box-shadow: var(--s2);
+  width: 460px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  padding: 18px 20px;
+}
+
+.auth-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.auth-modal-header h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.auth-env {
+  font-size: 12px;
+  color: var(--t2);
+  font-family: var(--f-mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.auth-close {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--t2);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: var(--r);
+}
+
+.auth-close:hover { background: var(--bg-2); color: var(--t0); }
+
+.auth-row {
+  display: flex;
+  gap: 10px;
+}
+
+.auth-row .auth-field { flex: 1; min-width: 0; }
+
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.auth-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--t1);
+}
+
+.auth-field input,
+.auth-field select {
+  padding: 7px 10px;
+  font-size: 13px;
+  border: 1px solid var(--b1);
+  border-radius: var(--r);
+  font-family: var(--f-mono);
+  background: var(--bg-1);
+  color: var(--t0);
+  outline: none;
+  width: 100%;
+  transition: border-color 0.14s, box-shadow 0.14s;
+}
+
+.auth-field input:focus,
+.auth-field select:focus {
+  border-color: var(--accent-lt);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+  background: var(--bg);
+}
+
+.auth-field input::placeholder { color: var(--t2); }
+
+.auth-check {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--t1);
+  cursor: pointer;
+  margin: 2px 0 6px;
+}
+
+.auth-status { font-size: 12.5px; min-height: 18px; margin-bottom: 8px; }
+.auth-status.ok  { color: var(--green); }
+.auth-status.err { color: #dc2626; }
+
+.auth-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+#schemaSelect {
+  margin-bottom: 8px;
+  box-sizing: border-box;
+}
+
+.table-result th.th-filtered::after {
+  content: ' \25CF';
+  font-size: 8px;
+  vertical-align: middle;
+}
+
+.col-filter-popup {
+  flex-direction: row;
+  align-items: center;
+}
+
+.col-filter-input {
+  background: var(--bg-1);
+  color: inherit;
+  border: 1px solid #3a4f66;
+  border-radius: 4px;
+  padding: 5px 8px;
+  font-size: 12px;
+  width: 180px;
+  outline: none;
+}
+
+.col-filter-clear {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid #3a4f66;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.col-filter-clear.active { background: var(--accent); color: var(--bg-1); }
+
+.table-result th.th-sort-asc::after  { content: ' \25B2'; font-size: 8px; }
+.table-result th.th-sort-desc::after { content: ' \25BC'; font-size: 8px; }
+.table-result th.th-filtered.th-sort-asc::after  { content: ' \25CF \25B2'; }
+.table-result th.th-filtered.th-sort-desc::after { content: ' \25CF \25BC'; }

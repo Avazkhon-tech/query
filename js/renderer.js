@@ -159,6 +159,79 @@ function showDatePicker(td, rowIndex, originalRow, col) {
     });
 }
 
+let activeColumnFilter = null;
+
+function showColumnFilter(th, col, filters, onChange, sort, onSort) {
+    if (activeColumnFilter) {
+        activeColumnFilter.remove();
+        activeColumnFilter = null;
+    }
+
+    const popup = document.createElement('div');
+    popup.className = 'date-picker-popup col-filter-popup';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'col-filter-input';
+    input.placeholder = `Filter ${col}…`;
+    input.value = filters[col] || '';
+
+    const clear = document.createElement('button');
+    clear.type = 'button';
+    clear.className = 'col-filter-clear';
+    clear.textContent = 'Clear';
+
+    const mkSort = (dir, label) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'col-filter-clear';
+        b.textContent = label;
+        b.classList.toggle('active', sort.col === col && sort.dir === dir);
+        b.addEventListener('click', () => {
+            const on = !(sort.col === col && sort.dir === dir);
+            onSort(on ? dir : null);
+            popup.querySelectorAll('.col-sort-btn').forEach(x => x.classList.remove('active'));
+            if (on) b.classList.add('active');
+        });
+        b.classList.add('col-sort-btn');
+        return b;
+    };
+
+    popup.append(input, clear, mkSort('asc', '▲ Asc'), mkSort('desc', '▼ Desc'));
+    document.body.appendChild(popup);
+    activeColumnFilter = popup;
+
+    const rect = th.getBoundingClientRect();
+    popup.style.top = (rect.bottom + 4) + 'px';
+    popup.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - popup.offsetWidth - 8)) + 'px';
+
+    const close = () => {
+        popup.remove();
+        activeColumnFilter = null;
+        document.removeEventListener('mousedown', onOutside, true);
+    };
+    const onOutside = e => {
+        if (!popup.contains(e.target)) close();
+    };
+    setTimeout(() => document.addEventListener('mousedown', onOutside, true), 0);
+
+    input.addEventListener('input', () => {
+        const term = input.value.trim().toLowerCase();
+        if (term) filters[col] = term; else delete filters[col];
+        onChange();
+    });
+    input.addEventListener('keydown', e => {
+        if (e.key === 'Escape' || e.key === 'Enter') close();
+    });
+    clear.addEventListener('click', () => {
+        input.value = '';
+        delete filters[col];
+        onChange();
+        close();
+    });
+    input.focus();
+}
+
 function formatTimestamp(val, colName) {
     if (!DATE_COL_RE.test(colName)) return null;
     const num = Number(val);
@@ -236,9 +309,75 @@ function renderTable(data, container) {
     const thead = document.createElement('thead');
     const trHead = document.createElement('tr');
 
+    const filters = {};
+    const rowEls = [];
+    const sort = { col: null, dir: null };
+    const thEls = {};
+    const applySort = () => {
+        const order = rowEls.map((tr, i) => i);
+        if (sort.col) {
+            const dir = sort.dir === 'desc' ? -1 : 1;
+            order.sort((a, b) => {
+                const x = data[a][sort.col], y = data[b][sort.col];
+                if (x === null || x === undefined) return (y === null || y === undefined) ? 0 : 1;
+                if (y === null || y === undefined) return -1;
+                if (typeof x === 'number' && typeof y === 'number') return (x - y) * dir;
+                const sx = typeof x === 'object' ? JSON.stringify(x) : String(x);
+                const sy = typeof y === 'object' ? JSON.stringify(y) : String(y);
+                return sx.localeCompare(sy, undefined, { numeric: true }) * dir;
+            });
+        }
+        order.forEach(i => tbody.appendChild(rowEls[i]));
+        headers.forEach(h => {
+            thEls[h].classList.toggle('th-sort-asc', sort.col === h && sort.dir === 'asc');
+            thEls[h].classList.toggle('th-sort-desc', sort.col === h && sort.dir === 'desc');
+        });
+    };
+    const applyFilters = () => {
+        let shown = 0;
+        rowEls.forEach((tr, i) => {
+            const ok = Object.entries(filters).every(([col, term]) => {
+                const v = data[i][col];
+                const text = v === null ? 'null' : (typeof v === 'object' ? JSON.stringify(v) : String(v));
+                return text.toLowerCase().includes(term);
+            });
+            tr.style.display = ok ? '' : 'none';
+            if (ok) shown++;
+        });
+        const countDiv = document.getElementById('result-count');
+        if (countDiv) countDiv.textContent = Object.keys(filters).length ? `${shown} / ${data.length} rows` : `${data.length} rows`;
+    };
+
     headers.forEach(h => {
         const th = document.createElement('th');
         th.textContent = h;
+        th.style.cursor = 'pointer';
+        th.title = 'Click to sort, double-click to filter';
+        let clickTimer = null;
+        th.addEventListener('click', e => {
+            e.stopPropagation();
+            clearTimeout(clickTimer);
+            clickTimer = setTimeout(() => {
+                // cycle: asc -> desc -> none
+                const next = sort.col !== h ? 'asc' : (sort.dir === 'asc' ? 'desc' : null);
+                sort.col = next ? h : null;
+                sort.dir = next;
+                applySort();
+            }, 250);
+        });
+        th.addEventListener('dblclick', e => {
+            e.stopPropagation();
+            clearTimeout(clickTimer);
+            showColumnFilter(th, h, filters, () => {
+                th.classList.toggle('th-filtered', !!filters[h]);
+                applyFilters();
+            }, sort, dir => {
+                sort.col = dir ? h : null;
+                sort.dir = dir;
+                applySort();
+            });
+        });
+        thEls[h] = th;
         trHead.appendChild(th);
     });
     thead.appendChild(trHead);
@@ -293,6 +432,7 @@ function renderTable(data, container) {
         });
         tr.addEventListener('dblclick', (e) => enterEditMode(tr, rowIndex, row, e.target.closest('td')));
         tbody.appendChild(tr);
+        rowEls.push(tr);
     });
 
     table.appendChild(tbody);

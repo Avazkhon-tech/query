@@ -18,9 +18,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/sql/sql.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.min.js"
+        defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"
+        defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"
+        defer></script>
 
     <script src="./js/state.js" defer></script>
     <script src="./js/api.js" defer></script>
@@ -28,7 +31,9 @@
     <script src="./js/db.js" defer></script>
     <script src="./js/actions.js" defer></script>
     <script src="./js/history.js" defer></script>
+    <script src="./js/sql-parser.js" defer></script>
     <script src="./js/script.js" defer></script>
+    <script src="./js/auth.js" defer></script>
     <script src="./js/module.js" defer></script>
     <script src="./js/ui.js" defer></script>
     <script src="./js/autocomplete.js" defer></script>
@@ -41,6 +46,7 @@
         <aside class="sidebar">
             <div class="sidebar-header">
                 <h2>Database Objects</h2>
+                <select id="schemaSelect" class="db-search-input" title="Schema" onchange="setSchema(this.value)"></select>
                 <input type="text" id="db-search" class="db-search-input" placeholder="Search objects..." />
             </div>
             <div class="accordion">
@@ -95,8 +101,17 @@
                     <option value="https://test-hc.ssv.uz/api/classificator/v1/query">screening : dev</option>
                     <option value="http://rs.ssv.uz/api/query">reading : prod</option>
                     <option value="http://reading-system.med-uic.uz/api/query">reading : dev</option>
+                    <option value="https://test-his.ssv.uz/api/classificator/v1/query">his : classificator</option>
+                    <option value="https://test-his.ssv.uz/api/auth/v1/query">his : authentication</option>
                 </select>
                 <input id="token" placeholder="JWT token (Bearer)" class="topbar-input token-input" />
+                <button id="auth-btn" class="sidebar-toggle-btn" title="Get token automatically (OAuth)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path
+                            d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zM15.5 7.5l3 3L22 7l-3-3">
+                        </path>
+                    </svg>
+                </button>
                 <button id="connectBtn" class="connect-btn" onclick="connect(this)" title="Connect (Alt + C)">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="16 18 22 12 16 6"></polyline>
@@ -105,15 +120,21 @@
                     Connect
                 </button>
                 <button id="theme-toggle" class="sidebar-toggle-btn ms-auto" title="Toggle Dark Mode">
-                    <svg id="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg id="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
                         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
                     </svg>
-                    <svg id="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
+                    <svg id="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" style="display:none">
                         <circle cx="12" cy="12" r="5"></circle>
-                        <line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line>
-                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                        <line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line>
-                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
                     </svg>
                 </button>
                 <button id="sidebar-right-toggle" class="sidebar-toggle-btn" title="Toggle History">
@@ -128,12 +149,53 @@
                 <div class="editor-wrapper">
                     <div class="editor" id="editor"></div>
                     <ul id="autocomplete" class="autocomplete hidden"></ul>
-                    <button class="run-btn" onclick="runQuery()" title="Run Query (Ctrl+Enter)">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                        </svg>
-                        Run
-                    </button>
+                    <div class="editor-controls">
+                        <span id="query-stmt-badge" class="stmt-badge hidden" title="Active query statement">Query 1 of
+                            1</span>
+                        <button id="comment-btn" class="editor-action-btn" onclick="toggleComment(window.cmEditor)"
+                            title="Toggle Comment (Ctrl+/)">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                <line x1="9" y1="9" x2="15" y2="9"></line>
+                            </svg>
+                            <span>Comment</span>
+                        </button>
+                        <div class="btn-group run-btn-group">
+                            <button id="main-run-btn" class="run-btn" onclick="runQuery()"
+                                title="Run Current Query or Selection (Ctrl+Enter)">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                </svg>
+                                <span id="run-btn-text">Run</span>
+                            </button>
+                            <button id="run-options-toggle" class="run-btn run-dropdown-toggle"
+                                onclick="toggleRunMenu(event)" title="Execution Options">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </button>
+                            <div id="run-menu" class="run-menu hidden">
+                                <div class="run-menu-item" onclick="runQuery({ mode: 'smart' })">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                    </svg>
+                                    <span>Run Current / Selection</span>
+                                    <span class="run-menu-kbd">Ctrl+Enter</span>
+                                </div>
+                                <div class="run-menu-item" onclick="runQuery({ mode: 'all' })">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <polyline points="13 17 18 12 13 7"></polyline>
+                                        <polyline points="6 17 11 12 6 7"></polyline>
+                                    </svg>
+                                    <span>Run All Queries</span>
+                                    <span class="run-menu-kbd">Ctrl+Shift+Enter</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="playground-resize-handle" id="playground-resize"></div>
@@ -182,14 +244,17 @@
                             <span>JSON</span>
                         </button>
                         <input id="filename-input" type="text" placeholder="filename" class="filename-input hidden" />
-                        <button id="fullscreen-btn" class="copy-btn" onclick="toggleResultFullscreen()" title="Fullscreen (Ctrl+Shift+F)">
-                            <svg id="fs-expand" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <button id="fullscreen-btn" class="copy-btn" onclick="toggleResultFullscreen()"
+                            title="Fullscreen (Ctrl+Shift+F)">
+                            <svg id="fs-expand" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
                                 <polyline points="15 3 21 3 21 9"></polyline>
                                 <polyline points="9 21 3 21 3 15"></polyline>
                                 <line x1="21" y1="3" x2="14" y2="10"></line>
                                 <line x1="3" y1="21" x2="10" y2="14"></line>
                             </svg>
-                            <svg id="fs-compress" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
+                            <svg id="fs-compress" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" style="display:none">
                                 <polyline points="4 14 10 14 10 20"></polyline>
                                 <polyline points="20 10 14 10 14 4"></polyline>
                                 <line x1="10" y1="14" x2="3" y2="21"></line>
@@ -221,6 +286,78 @@
             </div>
         </aside>
 
+    </div>
+
+    <div id="auth-overlay" class="auth-overlay hidden">
+        <div class="auth-modal">
+            <div class="auth-modal-header">
+                <h3>Get token automatically</h3>
+                <span id="auth-env" class="auth-env"></span>
+                <button id="auth-close" class="auth-close" title="Close">&times;</button>
+            </div>
+            <div class="auth-field">
+                <label for="auth-url">Access Token URL</label>
+                <input id="auth-url" placeholder="https://sso.example.uz/realms/.../protocol/openid-connect/token"
+                    autocomplete="off" />
+            </div>
+            <div class="auth-row">
+                <div class="auth-field">
+                    <label for="auth-grant">Grant type</label>
+                    <select id="auth-grant">
+                        <option value="password">Password credentials</option>
+                        <option value="client_credentials">Client credentials</option>
+                    </select>
+                </div>
+                <div class="auth-field">
+                    <label for="auth-format">Request body</label>
+                    <select id="auth-format">
+                        <option value="form">Form (OAuth2)</option>
+                        <option value="json">JSON (custom login)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="auth-row" id="auth-user-row">
+                <div class="auth-field">
+                    <label for="auth-username">Username</label>
+                    <input id="auth-username" autocomplete="off" />
+                </div>
+                <div class="auth-field">
+                    <label for="auth-password">Password</label>
+                    <input id="auth-password" type="password" autocomplete="new-password" />
+                </div>
+            </div>
+            <div class="auth-row">
+                <div class="auth-field">
+                    <label for="auth-client-id">Client ID</label>
+                    <input id="auth-client-id" autocomplete="off" />
+                </div>
+                <div class="auth-field">
+                    <label for="auth-client-secret">Client secret</label>
+                    <input id="auth-client-secret" type="password" autocomplete="new-password" />
+                </div>
+            </div>
+            <div class="auth-row">
+                <div class="auth-field">
+                    <label for="auth-scope">Scope (optional)</label>
+                    <input id="auth-scope" placeholder="openid" autocomplete="off" />
+                </div>
+                <div class="auth-field">
+                    <label for="auth-client-auth">Client auth</label>
+                    <select id="auth-client-auth">
+                        <option value="body">In request body</option>
+                        <option value="basic">Basic auth header</option>
+                    </select>
+                </div>
+            </div>
+            <label class="auth-check">
+                <input type="checkbox" id="auth-autorefresh" checked />
+                Auto-refresh token before it expires
+            </label>
+            <div id="auth-status" class="auth-status"></div>
+            <div class="auth-actions">
+                <button id="auth-get" class="connect-btn">Get Token</button>
+            </div>
+        </div>
     </div>
 </body>
 
